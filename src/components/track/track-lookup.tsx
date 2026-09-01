@@ -7,10 +7,16 @@ import { AnchorButton, Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Alert, Card, CardBody } from "@/components/ui/primitives";
 import { siteConfig, whatsappLink } from "@/config/site";
+import {
+  TRACKING_ID_MAX,
+  cleanTrackingId,
+  isValidPhone,
+  phoneInputValue,
+} from "@/lib/sanitize";
 import type { TrackingView } from "@/types";
 
 export function TrackLookup({ initialId = "" }: { initialId?: string }) {
-  const [trackingId, setTrackingId] = useState(initialId.toUpperCase());
+  const [trackingId, setTrackingId] = useState(cleanTrackingId(initialId));
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
@@ -26,11 +32,10 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
     setFormError("");
 
     const next: Record<string, string> = {};
-    if (trackingId.trim().length < 6) {
+    if (cleanTrackingId(trackingId).length < 6) {
       next.trackingId = "Enter the Tracking ID we sent you (e.g. DS-2609-0042)";
     }
-    const digits = phone.replace(/\D/g, "").replace(/^(91|0)/, "");
-    if (!/^[6-9]\d{9}$/.test(digits)) {
+    if (!isValidPhone(phone)) {
       next.phone = "Enter the 10-digit mobile number used on the request";
     }
     if (Object.keys(next).length) {
@@ -111,8 +116,9 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
               name="trackingId"
               value={trackingId}
               onChange={(event) =>
-                setTrackingId(event.target.value.toUpperCase())
+                setTrackingId(cleanTrackingId(event.target.value))
               }
+              maxLength={TRACKING_ID_MAX}
               placeholder="DS-2609-0042"
               autoCapitalize="characters"
               autoComplete="off"
@@ -139,9 +145,9 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
                 type="tel"
                 inputMode="numeric"
                 autoComplete="tel"
-                maxLength={13}
+                maxLength={12}
                 value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                onChange={(event) => setPhone(phoneInputValue(event.target.value))}
                 placeholder="98765 43210"
                 className="rounded-l-none"
                 invalid={Boolean(errors.phone)}

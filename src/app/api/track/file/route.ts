@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { fail, handleError } from "@/lib/api";
 import { connectDB } from "@/lib/db";
 import { fileContentType, findFile, openWebStream } from "@/lib/gridfs";
+import { cleanFilename } from "@/lib/sanitize";
 import { verifyTrackToken } from "@/lib/tokens";
 import { Application } from "@/models/Application";
 
@@ -56,12 +57,15 @@ export async function GET(request: NextRequest) {
         }
       );
 
-      const filename = deliverable.filename || `${claims.trackingId}.pdf`;
+      const filename = cleanFilename(
+        deliverable.filename,
+        `${claims.trackingId}.pdf`
+      );
       return new Response(stream, {
         headers: {
           "Content-Type": fileContentType(file),
           "Content-Length": String(file.length),
-          "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "")}"`,
+          "Content-Disposition": `attachment; filename="${filename}"`,
           "Cache-Control": "private, no-store",
         },
       });

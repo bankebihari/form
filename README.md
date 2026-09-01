@@ -199,7 +199,7 @@ npm run lint        # ESLint
 
 ---
 
-## 10. How a Tracking ID is made
+## 11. How a Tracking ID is made
 
 `DS-YYMM-NNNN`, for example `DS-2609-0042`: `DS` for the brand, `2609` for the
 month it was raised (September 2026), and a counter that restarts each month.
@@ -213,7 +213,32 @@ opens their tracking page — so it is worth sending it on WhatsApp every time.
 
 ---
 
-## 9. Security notes
+## 9. Input handling
+
+Every field is cleaned and checked in **one place**, `src/lib/sanitize.ts`, and
+both the browser and the server import from it. The form cannot accept
+something the API will reject, and the API never trusts that the form did its
+job — it cleans and re-validates everything itself.
+
+- **Names** keep letters in any script, spaces, `.`, `'` and `-`. Digits and
+  symbols are removed as you type, so `23424m,sdnvsd,nv` becomes `msdnvsdnv`.
+- **Phone numbers** are reduced to the 10 digits we store. The country code is
+  stripped only when the length proves it is one, so `9123456789` keeps its
+  leading `91`.
+- **Emails** are lowercased, stripped of whitespace and length-capped.
+- **State** must be one of the 36 in `src/data/states.ts`, never free text.
+- **Free text** loses control characters, zero-width characters and the
+  bidirectional overrides that can make stored text render as something other
+  than what was saved. Runs of blank lines are squeezed.
+- **Filenames** lose path separators, quotes and control characters before they
+  are stored or put into a `Content-Disposition` header.
+- **Amounts** become non-negative whole rupees with a ceiling.
+- **Passwords** are never trimmed or rewritten — only length-capped at 128, so
+  an oversized body cannot make bcrypt burn CPU.
+
+---
+
+## 10. Security notes
 
 - Passwords are bcrypt-hashed (cost 12); changing one bumps a token version
   that invalidates every existing session.

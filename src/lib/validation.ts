@@ -1,46 +1,109 @@
 import { z } from "zod";
+import { INDIAN_STATES } from "@/data/states";
 import { CALL_SLOTS } from "@/lib/constants";
+import {
+  CITY_MAX,
+  EMAIL_MAX,
+  NAME_MAX,
+  PASSWORD_MAX,
+  TRACKING_ID_MAX,
+  capPassword,
+  cleanCity,
+  cleanEmail,
+  cleanLine,
+  cleanName,
+  cleanText,
+  cleanTrackingId,
+  isValidEmail,
+  isValidName,
+  isValidPhone,
+  normalisePhone,
+} from "@/lib/sanitize";
 
-/** Indian mobile numbers, tolerant of +91, 0 prefixes and spaces. */
+/**
+ * Every schema here sanitises first and validates second, using the shared
+ * helpers in `lib/sanitize`. The browser runs the same helpers, so what the
+ * form accepts and what the server accepts cannot drift apart — and the server
+ * still cleans everything again, because a form is not a security boundary.
+ */
+
 export const phoneSchema = z
   .string()
-  .trim()
-  .transform((value) => value.replace(/[\s\-()]/g, ""))
-  .refine(
-    (value) => /^(\+?91|0)?[6-9]\d{9}$/.test(value),
-    "Enter a valid 10-digit Indian mobile number"
-  )
-  .transform((value) => value.replace(/^(\+?91|0)/, ""));
+  .max(20, "That does not look like a phone number")
+  .transform(normalisePhone)
+  .refine(isValidPhone, "Enter a valid 10-digit Indian mobile number");
 
 export const nameSchema = z
   .string()
-  .trim()
-  .min(2, "Please enter your full name")
-  .max(80, "That name looks too long")
-  .regex(/^[\p{L}\s.'-]+$/u, "Name can only contain letters, spaces and . ' -");
+  .max(200)
+  .transform(cleanName)
+  .refine(isValidName, "Please enter your full name using letters only");
 
 export const optionalEmail = z
-  .union([z.literal(""), z.string().trim().email("Enter a valid email address")])
+  .string()
+  .max(300)
   .optional()
-  .transform((value) => value || "");
+  .default("")
+  .transform(cleanEmail)
+  .refine(
+    (value) => value === "" || isValidEmail(value),
+    "Enter a valid email address"
+  );
 
-const shortText = (max: number) => z.string().trim().max(max).optional().default("");
+/** Free text we store and later show to staff. */
+const paragraph = (max: number, message: string) =>
+  z
+    .string()
+    .max(max * 4, message)
+    .optional()
+    .default("")
+    .transform((value) => cleanText(value, max));
+
+const line = (max: number) =>
+  z
+    .string()
+    .max(max * 4)
+    .optional()
+    .default("")
+    .transform((value) => cleanLine(value, max));
+
+const citySchema = z
+  .string()
+  .max(CITY_MAX * 4)
+  .optional()
+  .default("")
+  .transform(cleanCity);
+
+/** A free-text state would end up in reports, so it must be one we know. */
+const stateSchema = z
+  .string()
+  .max(80)
+  .optional()
+  .default("")
+  .transform((value) => cleanLine(value, 80))
+  .refine(
+    (value) =>
+      value === "" || (INDIAN_STATES as readonly string[]).includes(value),
+    "Choose a state from the list"
+  );
 
 export const applicationInputSchema = z.object({
-  serviceSlug: z.string().trim().min(1, "Choose the service you need"),
+  serviceSlug: z
+    .string()
+    .max(80)
+    .transform((value) => value.trim().toLowerCase())
+    .refine(
+      (value) => /^[a-z0-9-]{2,80}$/.test(value),
+      "Choose the service you need"
+    ),
   name: nameSchema,
   phone: phoneSchema,
   email: optionalEmail,
-  city: shortText(60),
-  state: shortText(60),
-  address: shortText(240),
-  requirement: z
-    .string()
-    .trim()
-    .max(1500, "Please keep this under 1500 characters")
-    .optional()
-    .default(""),
-  purpose: shortText(120),
+  city: citySchema,
+  state: stateSchema,
+  address: paragraph(240, "Please keep the address shorter"),
+  requirement: paragraph(1500, "Please keep this under 1500 characters"),
+  purpose: line(120),
   urgent: z.boolean().optional().default(false),
   consent: z
     .boolean()
@@ -56,23 +119,49 @@ export const leadInputSchema = z.object({
   name: nameSchema,
   phone: phoneSchema,
   email: optionalEmail,
-  city: shortText(60),
-  serviceSlug: shortText(80),
-  serviceTitle: shortText(120),
-  message: z
+  city: citySchema,
+  serviceSlug: z
     .string()
-    .trim()
-    .max(1200, "Please keep this under 1200 characters")
+    .max(80)
     .optional()
-    .default(""),
+    .default("")
+    .transform((value) => value.trim().toLowerCase())
+    .refine(
+      (value) => value === "" || /^[a-z0-9-]{2,80}$/.test(value),
+      "Unknown service"
+    ),
+  serviceTitle: line(120),
+  message: paragraph(1200, "Please keep this under 1200 characters"),
   preferredDate: z
-    .union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a valid date")])
+    .string()
+    .max(20)
     .optional()
-    .default(""),
+    .default("")
+    .transform((value) => cleanLine(value, 20))
+    .refine(
+      (value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value),
+      "Pick a valid date"
+    )
+    .refine((value) => {
+      if (!value) return true;
+      const picked = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(picked.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const limit = new Date(today);
+      limit.setDate(limit.getDate() + 60);
+      return picked >= today && picked <= limit;
+    }, "Pick a date within the next 60 days"),
   preferredSlot: z
-    .union([z.literal(""), z.enum(CALL_SLOTS)])
+    .string()
+    .max(40)
     .optional()
-    .default(""),
+    .default("")
+    .transform((value) => cleanLine(value, 40))
+    .refine(
+      (value) => value === "" || (CALL_SLOTS as readonly string[]).includes(value),
+      "Pick a time window from the list"
+    ),
   consent: z
     .boolean()
     .refine((value) => value === true, "Please accept the terms to continue"),
@@ -84,17 +173,31 @@ export type LeadInput = z.infer<typeof leadInputSchema>;
 export const trackLookupSchema = z.object({
   trackingId: z
     .string()
-    .trim()
-    .toUpperCase()
-    .min(6, "Enter the Tracking ID we sent you")
-    .max(24),
+    .max(TRACKING_ID_MAX * 4)
+    .transform(cleanTrackingId)
+    .refine(
+      (value) => value.length >= 6,
+      "Enter the Tracking ID we sent you, for example DS-2609-0042"
+    ),
   phone: phoneSchema,
 });
 
 export const adminLoginSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z
+    .string()
+    .max(EMAIL_MAX * 4)
+    .transform(cleanEmail)
+    .refine(isValidEmail, "Enter a valid email address"),
+  // Never trimmed or rewritten: that would change what someone typed. Only
+  // capped, so an oversized body cannot make bcrypt burn CPU.
+  password: z
+    .string()
+    .transform(capPassword)
+    .refine((value) => value.length >= 8, "Password must be at least 8 characters"),
 });
+
+export const NAME_LIMIT = NAME_MAX;
+export const PASSWORD_LIMIT = PASSWORD_MAX;
 
 /** Turns a ZodError into { fieldName: message } for the form UI. */
 export function fieldErrors(error: z.ZodError) {

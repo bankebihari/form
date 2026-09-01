@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants";
 import { connectDB } from "@/lib/db";
 import { uploadBuffer } from "@/lib/gridfs";
+import { cleanFilename } from "@/lib/sanitize";
 import { getServiceBySlug } from "@/lib/services";
 import { applicationInputSchema } from "@/lib/validation";
 import { Application } from "@/models/Application";
@@ -81,16 +82,26 @@ export async function POST(request: NextRequest) {
       .filter((entry): entry is File => entry instanceof File && entry.size > 0)
       .slice(0, MAX_UPLOAD_FILES);
 
+    const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalBytes > MAX_UPLOAD_BYTES * MAX_UPLOAD_FILES) {
+      return fail(
+        "Those files are too large altogether. Please send them on WhatsApp instead.",
+        413
+      );
+    }
+
     for (const file of files) {
+      // Never echo a raw client filename back into a message.
+      const shown = cleanFilename(file.name, "That file");
       if (file.size > MAX_UPLOAD_BYTES) {
         return fail(
-          `"${file.name}" is larger than 10 MB. Please compress it or send it on WhatsApp.`,
+          `"${shown}" is larger than 10 MB. Please compress it or send it on WhatsApp.`,
           413
         );
       }
       if (file.type && !ACCEPTED_UPLOAD_TYPES.includes(file.type)) {
         return fail(
-          `"${file.name}" is not a supported file type. Upload a PDF or a photo.`,
+          `"${shown}" is not a supported file type. Upload a PDF or a photo.`,
           415
         );
       }
@@ -101,16 +112,20 @@ export async function POST(request: NextRequest) {
     const attachments = [];
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
+      // The filename is client-supplied and later lands in a response header,
+      // so it is cleaned before it is ever stored.
+      const filename = cleanFilename(file.name, "attachment");
+      const contentType = file.type || "application/octet-stream";
       const fileId = await uploadBuffer({
         buffer,
-        filename: file.name,
-        contentType: file.type || "application/octet-stream",
+        filename,
+        contentType,
         metadata: { trackingId, kind: "supporting-document" },
       });
       attachments.push({
         fileId,
-        filename: file.name,
-        contentType: file.type || "application/octet-stream",
+        filename,
+        contentType,
         size: file.size,
         uploadedAt: new Date(),
       });

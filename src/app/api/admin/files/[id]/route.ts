@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { fail, handleError } from "@/lib/api";
 import { getAdminSession } from "@/lib/auth";
 import { fileContentType, findFile, openWebStream, toObjectId } from "@/lib/gridfs";
+import { cleanFilename } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export async function GET(
       headers: {
         "Content-Type": fileContentType(file),
         "Content-Length": String(file.length),
-        "Content-Disposition": `inline; filename="${file.filename.replace(/"/g, "")}"`,
+        "Content-Disposition": `inline; filename="${cleanFilename(file.filename)}"`,
         "Cache-Control": "private, no-store",
       },
     });

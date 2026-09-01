@@ -27,6 +27,16 @@ import {
 import { Alert, Badge, Card, CardBody } from "@/components/ui/primitives";
 import { INDIAN_STATES } from "@/data/states";
 import { MAX_UPLOAD_FILES } from "@/lib/constants";
+import {
+  NAME_MAX,
+  cleanCity,
+  cleanEmail,
+  cleanName,
+  isValidEmail,
+  isValidName,
+  isValidPhone,
+  phoneInputValue,
+} from "@/lib/sanitize";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import type { PlainService } from "@/types";
@@ -113,12 +123,14 @@ export function RequestForm({
     }
 
     if (current === 1) {
-      if (values.name.trim().length < 2) next.name = "Please enter your full name";
-      const digits = values.phone.replace(/\D/g, "").replace(/^(91|0)/, "");
-      if (!/^[6-9]\d{9}$/.test(digits)) {
+      // Exactly the checks the API runs, from the same module.
+      if (!isValidName(values.name)) {
+        next.name = "Please enter your full name using letters only";
+      }
+      if (!isValidPhone(values.phone)) {
         next.phone = "Enter a valid 10-digit mobile number";
       }
-      if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+      if (values.email && !isValidEmail(values.email)) {
         next.email = "Enter a valid email address";
       }
     }
@@ -311,7 +323,8 @@ export function RequestForm({
                   name="name"
                   autoComplete="name"
                   value={values.name}
-                  onChange={(event) => set("name", event.target.value)}
+                  onChange={(event) => set("name", cleanName(event.target.value))}
+                  maxLength={NAME_MAX}
                   placeholder="As written on your Aadhaar"
                   invalid={Boolean(errors.name)}
                 />
@@ -334,9 +347,11 @@ export function RequestForm({
                     type="tel"
                     inputMode="numeric"
                     autoComplete="tel"
-                    maxLength={13}
+                    maxLength={12}
                     value={values.phone}
-                    onChange={(event) => set("phone", event.target.value)}
+                    onChange={(event) =>
+                      set("phone", phoneInputValue(event.target.value))
+                    }
                     placeholder="98765 43210"
                     className="rounded-l-none"
                     invalid={Boolean(errors.phone)}
@@ -356,7 +371,7 @@ export function RequestForm({
                   type="email"
                   autoComplete="email"
                   value={values.email}
-                  onChange={(event) => set("email", event.target.value)}
+                  onChange={(event) => set("email", cleanEmail(event.target.value))}
                   placeholder="you@example.com"
                   invalid={Boolean(errors.email)}
                 />
@@ -369,7 +384,7 @@ export function RequestForm({
                     name="city"
                     autoComplete="address-level2"
                     value={values.city}
-                    onChange={(event) => set("city", event.target.value)}
+                    onChange={(event) => set("city", cleanCity(event.target.value))}
                     placeholder="e.g. Indore"
                   />
                 </Field>

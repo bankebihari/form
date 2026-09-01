@@ -62,7 +62,5 @@ export function toTrackingView(application: PlainApplication): TrackingView {
   };
 }
 
-/** Normalises a phone to the 10-digit form we store. */
-export function normalisePhone(value: string) {
-  return value.replace(/\D/g, "").replace(/^(91|0)/, "");
-}
+/** Re-exported so callers have one obvious place to reach for it. */
+export { normalisePhone } from "@/lib/sanitize";

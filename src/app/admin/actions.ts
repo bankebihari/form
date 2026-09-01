@@ -12,6 +12,13 @@ import {
 } from "@/lib/constants";
 import { connectDB } from "@/lib/db";
 import { deleteFile, uploadBuffer } from "@/lib/gridfs";
+import {
+  cleanAmount,
+  cleanFilename,
+  cleanLine,
+  cleanReference,
+  cleanText,
+} from "@/lib/sanitize";
 import { buildWatermarkedPreview } from "@/lib/watermark";
 import { Application } from "@/models/Application";
 import { AdminUser } from "@/models/AdminUser";
@@ -46,9 +53,11 @@ export async function setQuoteAction(
   const parsed = z
     .object({
       id: idSchema,
-      totalAmount: z.coerce.number().min(0).max(10_000_000),
-      governmentFee: z.coerce.number().min(0).max(10_000_000).default(0),
-      notes: z.string().trim().max(600).optional().default(""),
+      totalAmount: z.unknown().transform((value) => cleanAmount(value)),
+      governmentFee: z.unknown().transform((value) => cleanAmount(value)),
+      notes: z
+        .unknown()
+        .transform((value) => cleanText(typeof value === "string" ? value : "", 600)),
     })
     .safeParse(Object.fromEntries(formData));
 
@@ -107,10 +116,12 @@ export async function recordPaymentAction(
     .object({
       id: idSchema,
       which: z.enum(["advance", "balance"]),
-      amount: z.coerce.number().min(0).max(10_000_000),
+      amount: z.unknown().transform((value) => cleanAmount(value)),
       method: z.enum(PAYMENT_METHODS),
-      reference: z.string().trim().max(80).optional().default(""),
-      note: z.string().trim().max(300).optional().default(""),
+      reference: z.unknown().transform((value) => cleanReference(value)),
+      note: z
+        .unknown()
+        .transform((value) => cleanText(typeof value === "string" ? value : "", 300)),
     })
     .safeParse(Object.fromEntries(formData));
 
@@ -217,7 +228,9 @@ export async function updateStatusAction(
     .object({
       id: idSchema,
       status: z.enum(ALL_STATUSES),
-      note: z.string().trim().max(600).optional().default(""),
+      note: z
+        .unknown()
+        .transform((value) => cleanText(typeof value === "string" ? value : "", 600)),
     })
     .safeParse(Object.fromEntries(formData));
 
@@ -274,8 +287,13 @@ export async function addNoteAction(
   const parsed = z
     .object({
       id: idSchema,
-      title: z.string().trim().min(2).max(120),
-      note: z.string().trim().max(800).optional().default(""),
+      title: z
+        .unknown()
+        .transform((value) => cleanLine(typeof value === "string" ? value : "", 120))
+        .refine((value) => value.length >= 2, "Write a short title"),
+      note: z
+        .unknown()
+        .transform((value) => cleanText(typeof value === "string" ? value : "", 800)),
       internal: z
         .union([z.literal("on"), z.literal("true"), z.literal("")])
         .optional(),
@@ -328,6 +346,7 @@ export async function uploadDeliverableAction(
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const contentType = file.type || "application/octet-stream";
+  const filename = cleanFilename(file.name, `${application.trackingId}.pdf`);
 
   // Replacing an earlier upload: drop the old blobs so GridFS does not grow.
   if (application.deliverable.fileId) {
@@ -339,7 +358,7 @@ export async function uploadDeliverableAction(
 
   const fileId = await uploadBuffer({
     buffer,
-    filename: file.name,
+    filename,
     contentType,
     metadata: {
       trackingId: application.trackingId,
@@ -367,7 +386,7 @@ export async function uploadDeliverableAction(
   application.deliverable = {
     fileId,
     previewFileId,
-    filename: file.name,
+    filename,
     contentType,
     size: file.size,
     uploadedAt: new Date(),
@@ -494,7 +513,9 @@ export async function updateLeadAction(
     .object({
       id: idSchema,
       status: z.enum(["NEW", "CONTACTED", "CONVERTED", "CLOSED"]),
-      adminNote: z.string().trim().max(600).optional().default(""),
+      adminNote: z
+        .unknown()
+        .transform((value) => cleanText(typeof value === "string" ? value : "", 600)),
     })
     .safeParse(Object.fromEntries(formData));
 

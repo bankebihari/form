@@ -6,6 +6,12 @@ import { AlertCircle, Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Alert, Card, CardBody } from "@/components/ui/primitives";
+import {
+  EMAIL_MAX,
+  PASSWORD_MAX,
+  cleanEmail,
+  isValidEmail,
+} from "@/lib/sanitize";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -18,6 +24,18 @@ export function AdminLoginForm() {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+
+    // Checked here for a fast, clear message; the server checks it again and
+    // is the only thing that decides whether the credentials are correct.
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Your password is at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -67,7 +85,9 @@ export function AdminLoginForm() {
               type="email"
               autoComplete="username"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => setEmail(cleanEmail(event.target.value))}
+              maxLength={EMAIL_MAX}
+              spellCheck={false}
               placeholder="you@example.com"
               required
             />
@@ -80,7 +100,10 @@ export function AdminLoginForm() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) =>
+                  setPassword(event.target.value.slice(0, PASSWORD_MAX))
+                }
+                maxLength={PASSWORD_MAX}
                 placeholder="Your password"
                 className="pr-12"
                 required
