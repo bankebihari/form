@@ -150,6 +150,12 @@ export function statusStepIndex(status: ApplicationStatus) {
   return index; // -1 for ON_HOLD / CANCELLED
 }
 
+/**
+ * Stored on a request when the client did not pick a service. Kept as a real
+ * slug rather than an empty string so the schema stays required-and-present.
+ */
+export const UNSPECIFIED_SERVICE_SLUG = "not-specified";
+
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB per file
 export const MAX_UPLOAD_FILES = 5;
 export const ACCEPTED_UPLOAD_TYPES = [

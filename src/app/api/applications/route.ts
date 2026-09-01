@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants";
 import { connectDB } from "@/lib/db";
 import { uploadBuffer } from "@/lib/gridfs";
+import { UNSPECIFIED_SERVICE_SLUG } from "@/lib/constants";
 import { cleanFilename } from "@/lib/sanitize";
 import { getServiceBySlug } from "@/lib/services";
 import { applicationInputSchema } from "@/lib/validation";
@@ -68,12 +69,27 @@ export async function POST(request: NextRequest) {
     // Honeypot: quietly accept so the bot does not learn anything useful.
     if (input.website) return ok({ trackingId: "DS-0000-0000" });
 
-    const service = await getServiceBySlug(input.serviceSlug);
-    if (!service) {
+    // No service chosen is a valid request: our team decides on the call.
+    const service = input.serviceSlug
+      ? await getServiceBySlug(input.serviceSlug)
+      : null;
+
+    if (input.serviceSlug && !service) {
       return fail("That service is not available. Please pick another.", 422, {
         serviceSlug: "Choose a service from the list",
       });
     }
+
+    const serviceRef = service
+      ? {
+          serviceId: /^[0-9a-fA-F]{24}$/.test(service._id)
+            ? service._id
+            : undefined,
+          slug: service.slug,
+          title: service.title,
+          startingPrice: service.startingPrice,
+        }
+      : { slug: UNSPECIFIED_SERVICE_SLUG, title: "Not specified yet" };
 
     await connectDB();
 
@@ -133,12 +149,7 @@ export async function POST(request: NextRequest) {
 
     const application = await Application.create({
       trackingId,
-      service: {
-        serviceId: /^[0-9a-fA-F]{24}$/.test(service._id) ? service._id : undefined,
-        slug: service.slug,
-        title: service.title,
-        startingPrice: service.startingPrice,
-      },
+      service: serviceRef,
       applicant: {
         name: input.name,
         phone: input.phone,
@@ -157,7 +168,9 @@ export async function POST(request: NextRequest) {
         {
           status: "SUBMITTED",
           title: "Request received",
-          note: `Request raised on the website for ${service.title}.`,
+          note: service
+            ? `Request raised on the website for ${service.title}.`
+            : "Request raised on the website. The service will be confirmed on the call.",
           by: "Website",
           at: new Date(),
         },
@@ -167,7 +180,7 @@ export async function POST(request: NextRequest) {
     return ok(
       {
         trackingId: application.trackingId,
-        serviceTitle: service.title,
+        serviceTitle: serviceRef.title,
         name: input.name,
       },
       { status: 201 }

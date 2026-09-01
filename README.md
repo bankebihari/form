@@ -137,12 +137,16 @@ running `npm run seed` again.
 | --- | --- |
 | `/` | Home — trust, services, how it works, the 10/90 promise, FAQ |
 | `/services`, `/services/[slug]` | SEO landing page per document type |
-| `/request` | Four-step mobile request form with file upload |
+| `/request` | Single-page request form with file upload — only name and mobile are required |
 | `/request/success/[trackingId]` | Tracking ID + WhatsApp handoff |
 | `/track` | Status lookup by Tracking ID + phone |
 | `/request-a-call`, `/book-a-demo`, `/contact` | Lead capture |
 | `/how-it-works`, `/about` | Explainers |
 | `/privacy`, `/terms`, `/refund-policy` | Legal |
+
+Choosing a service is optional. A request raised without one is stored as
+"Not specified yet" and the team confirms it on the call, which is why the form
+does not gate on it. Links from a service page still preselect that service.
 
 Clients never create an account. The Tracking ID plus their registered phone
 number is the whole authentication model, and a successful lookup issues a

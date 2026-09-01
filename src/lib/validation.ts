@@ -88,13 +88,17 @@ const stateSchema = z
   );
 
 export const applicationInputSchema = z.object({
+  // Optional on purpose: many people do not know which document they need
+  // until we have spoken to them, so the form must not gate on it.
   serviceSlug: z
     .string()
     .max(80)
+    .optional()
+    .default("")
     .transform((value) => value.trim().toLowerCase())
     .refine(
-      (value) => /^[a-z0-9-]{2,80}$/.test(value),
-      "Choose the service you need"
+      (value) => value === "" || /^[a-z0-9-]{2,80}$/.test(value),
+      "Choose a service from the list"
     ),
   name: nameSchema,
   phone: phoneSchema,

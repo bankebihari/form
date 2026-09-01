@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Copy, MessageCircle, Sparkles } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/primitives";
 import { siteConfig, whatsappTo } from "@/config/site";
+import { UNSPECIFIED_SERVICE_SLUG } from "@/lib/constants";
 import { cn, formatINR } from "@/lib/utils";
 import type { PlainApplication } from "@/types";
 
@@ -22,7 +23,13 @@ export function WhatsappTemplates({
   const [copied, setCopied] = useState<string | null>(null);
 
   const name = application.applicant.name;
-  const service = application.service.title;
+  // A request can arrive without a service chosen, so the wording has to work
+  // both ways rather than saying "your Not specified yet".
+  const hasService = application.service.slug !== UNSPECIFIED_SERVICE_SLUG;
+  const service = hasService ? application.service.title : "document";
+  const receivedLine = hasService
+    ? `We have received your request for ${application.service.title}.`
+    : "We have received your request.";
   const id = application.trackingId;
   const trackUrl = `${siteConfig.url}/track?id=${id}`;
   const total = application.quote?.totalAmount ?? 0;
@@ -38,7 +45,7 @@ export function WhatsappTemplates({
       body: [
         `Namaste ${name}, this is ${siteConfig.name}.`,
         ``,
-        `We have received your request for ${service}.`,
+        receivedLine,
         `Your Tracking ID is: ${id}`,
         ``,
         `You can check the live status any time here:`,
