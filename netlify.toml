@@ -11,6 +11,15 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--no-audit --no-fund"
 
+  # Netlify treats every environment variable as a secret and fails the build
+  # if it finds the value in the build output. MONGODB_DB is "docseva" - our own
+  # brand name - which appears legitimately in the site copy, our email address,
+  # the cookie name and the database default. It is not a credential, so it is
+  # excluded from the scan. MONGODB_URI and AUTH_SECRET are deliberately NOT
+  # excluded: if either of those ever shows up in the output, the build should
+  # fail loudly.
+  SECRETS_SCAN_OMIT_KEYS = "MONGODB_DB"
+
 # Next.js sets these itself for pages it serves, but a stray request to a
 # static asset should still carry them.
 [[headers]]
