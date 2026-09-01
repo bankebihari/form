@@ -24,7 +24,14 @@ export async function POST(request: NextRequest) {
     const limit = rateLimit(`track:${ip}`, 12, 5 * 60 * 1000);
     if (!limit.allowed) return tooManyRequests();
 
-    const body = await request.json();
+    // An empty or malformed body is a bad request, not a server fault.
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return fail("Please enter your Tracking ID and mobile number.", 422);
+    }
+
     const parsed = trackLookupSchema.safeParse(body);
     if (!parsed.success) {
       const errors: Record<string, string> = {};

@@ -20,7 +20,14 @@ export async function POST(request: NextRequest) {
     const limit = rateLimit(`lead:${ip}`, 8, 10 * 60 * 1000);
     if (!limit.allowed) return tooManyRequests();
 
-    const parsed = leadInputSchema.safeParse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return fail("Please fill in the form and try again.", 422);
+    }
+
+    const parsed = leadInputSchema.safeParse(body);
     if (!parsed.success) {
       const errors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {

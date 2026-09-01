@@ -1,5 +1,11 @@
 import { NextRequest } from "next/server";
-import { fail, handleError } from "@/lib/api";
+import {
+  clientIp,
+  fail,
+  handleError,
+  rateLimit,
+  tooManyRequests,
+} from "@/lib/api";
 import { getAdminSession } from "@/lib/auth";
 import { fileContentType, findFile, openWebStream, toObjectId } from "@/lib/gridfs";
 import { cleanFilename } from "@/lib/sanitize";
@@ -9,10 +15,15 @@ export const dynamic = "force-dynamic";
 
 /** Staff-only access to any stored file: client uploads, deliverables, previews. */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Staff are trusted, but a session should still not be able to walk the
+    // whole file store by guessing object ids at speed.
+    const limit = rateLimit(`admin-file:${clientIp(request)}`, 120, 10 * 60 * 1000);
+    if (!limit.allowed) return tooManyRequests();
+
     const session = await getAdminSession();
     if (!session) return fail("Sign in to view this file.", 401);
 

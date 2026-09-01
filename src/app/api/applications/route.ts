@@ -38,7 +38,12 @@ export async function POST(request: NextRequest) {
     const limit = rateLimit(`application:${ip}`, 6, 10 * 60 * 1000);
     if (!limit.allowed) return tooManyRequests();
 
-    const form = await request.formData();
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return fail("We could not read that submission. Please try again.", 422);
+    }
 
     const parsed = applicationInputSchema.safeParse({
       serviceSlug: textFrom(form.get("serviceSlug")),

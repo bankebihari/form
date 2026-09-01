@@ -1,5 +1,11 @@
 import { NextRequest } from "next/server";
-import { fail, handleError } from "@/lib/api";
+import {
+  clientIp,
+  fail,
+  handleError,
+  rateLimit,
+  tooManyRequests,
+} from "@/lib/api";
 import { connectDB } from "@/lib/db";
 import { fileContentType, findFile, openWebStream } from "@/lib/gridfs";
 import { cleanFilename } from "@/lib/sanitize";
@@ -20,6 +26,10 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
+    // A valid token should not become an unlimited download tap.
+    const limit = rateLimit(`track-file:${clientIp(request)}`, 60, 10 * 60 * 1000);
+    if (!limit.allowed) return tooManyRequests();
+
     const token = request.nextUrl.searchParams.get("token") ?? "";
     const kind = request.nextUrl.searchParams.get("kind") ?? "preview";
 
