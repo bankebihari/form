@@ -591,7 +591,7 @@ export function DocumentPanel({
           <Field
             label={deliverable?.fileId ? "Replace the document" : "Upload the finished document"}
             htmlFor="file"
-            help="PDF or a photo. A watermarked preview is generated automatically, and a new upload always starts locked."
+            help="PDF or a photo, up to 4 MB. A watermarked preview is generated automatically, and a new upload always starts locked."
           >
             <input
               id="file"

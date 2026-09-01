@@ -9,6 +9,7 @@ import { requireAdmin } from "@/lib/auth";
 import {
   ALL_STATUSES,
   LEAD_SOURCES,
+  MAX_UPLOAD_BYTES,
   PAYMENT_METHODS,
   UNSPECIFIED_SERVICE_SLUG,
   type ApplicationStatus,
@@ -529,8 +530,11 @@ export async function uploadDeliverableAction(
   if (!(file instanceof File) || file.size === 0) {
     return problem("Choose the finished document to upload.");
   }
-  if (file.size > 20 * 1024 * 1024) {
-    return problem("That file is larger than 20 MB.");
+  // Same serverless body limit applies to server actions.
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return problem(
+      "That file is larger than 4 MB. Compress it or scan at a lower quality, then upload again."
+    );
   }
 
   await connectDB();

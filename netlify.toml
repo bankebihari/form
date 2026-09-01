@@ -1,0 +1,26 @@
+# Netlify build configuration.
+#
+# The Next.js runtime is detected automatically; this file only pins the
+# versions and keeps the build reproducible.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# Next.js sets these itself for pages it serves, but a stray request to a
+# static asset should still carry them.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+    Cache-Control = "no-store, max-age=0"

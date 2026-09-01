@@ -391,8 +391,8 @@ export function RequestForm({
                   Tap to add photos or PDFs
                 </span>
                 <span className="text-[12.5px] text-muted">
-                  Up to {MAX_UPLOAD_FILES} files, 10 MB each. Phone photos are
-                  fine.
+                  Up to {MAX_UPLOAD_FILES} files, 4 MB in total. Phone photos
+                  are fine — send bigger ones on WhatsApp.
                 </span>
                 <input
                   id="files"

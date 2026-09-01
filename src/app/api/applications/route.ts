@@ -11,6 +11,7 @@ import {
   ACCEPTED_UPLOAD_TYPES,
   MAX_UPLOAD_BYTES,
   MAX_UPLOAD_FILES,
+  MAX_UPLOAD_TOTAL_BYTES,
 } from "@/lib/constants";
 import { connectDB } from "@/lib/db";
 import { uploadBuffer } from "@/lib/gridfs";
@@ -104,9 +105,9 @@ export async function POST(request: NextRequest) {
       .slice(0, MAX_UPLOAD_FILES);
 
     const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-    if (totalBytes > MAX_UPLOAD_BYTES * MAX_UPLOAD_FILES) {
+    if (totalBytes > MAX_UPLOAD_TOTAL_BYTES) {
       return fail(
-        "Those files are too large altogether. Please send them on WhatsApp instead.",
+        "Those files come to more than 4 MB altogether. Please send them on WhatsApp instead, or upload fewer at a time.",
         413
       );
     }
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       const shown = cleanFilename(file.name, "That file");
       if (file.size > MAX_UPLOAD_BYTES) {
         return fail(
-          `"${shown}" is larger than 10 MB. Please compress it or send it on WhatsApp.`,
+          `"${shown}" is larger than 4 MB. Please send it on WhatsApp instead.`,
           413
         );
       }

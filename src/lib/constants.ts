@@ -150,8 +150,18 @@ export function statusStepIndex(status: ApplicationStatus) {
  */
 export const UNSPECIFIED_SERVICE_SLUG = "not-specified";
 
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB per file
-export const MAX_UPLOAD_FILES = 5;
+/**
+ * Upload limits are set by the hosting platform, not by us.
+ *
+ * Vercel and Netlify both run route handlers as serverless functions, where the
+ * whole request body is capped at roughly 4.5 MB (the AWS Lambda limit). A
+ * larger upload is rejected by the platform before our code ever runs, so the
+ * client would see a raw network failure instead of a helpful message. We stay
+ * comfortably under it and point people at WhatsApp for anything bigger.
+ */
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB per file
+export const MAX_UPLOAD_TOTAL_BYTES = 4 * 1024 * 1024; // 4 MB per request
+export const MAX_UPLOAD_FILES = 4;
 export const ACCEPTED_UPLOAD_TYPES = [
   "application/pdf",
   "image/jpeg",
