@@ -65,6 +65,23 @@ const DeliverableSchema = new Schema(
   { _id: false }
 );
 
+/**
+ * The conversation on a request. The client writes from their tracking page,
+ * staff reply from the panel. It keeps the back-and-forth attached to the job
+ * instead of scattered across WhatsApp threads.
+ */
+const MessageSchema = new Schema(
+  {
+    from: { type: String, enum: ["CLIENT", "STAFF"], required: true },
+    body: { type: String, required: true, trim: true },
+    byName: { type: String, default: "" },
+    at: { type: Date, default: Date.now },
+    /** Set when the other side has seen it. */
+    readAt: { type: Date, default: undefined },
+  },
+  { _id: false }
+);
+
 const TimelineSchema = new Schema(
   {
     status: { type: String, enum: ALL_STATUSES, required: true },
@@ -118,6 +135,7 @@ const ApplicationSchema = new Schema(
     deliverable: { type: DeliverableSchema, required: true, default: () => ({}) },
 
     timeline: { type: [TimelineSchema], default: [] },
+    messages: { type: [MessageSchema], default: [] },
 
     source: { type: String, enum: LEAD_SOURCES, default: "WEBSITE" },
     priority: { type: String, enum: ["NORMAL", "URGENT"], default: "NORMAL" },

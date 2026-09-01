@@ -50,6 +50,12 @@ export function toTrackingView(application: PlainApplication): TrackingView {
       released: Boolean(application.deliverable?.released),
       releasedAt: application.deliverable?.releasedAt,
     },
+    messages: (application.messages ?? []).map((message) => ({
+      from: message.from,
+      body: message.body,
+      byName: message.from === "STAFF" ? message.byName : "",
+      at: message.at,
+    })),
     timeline: (application.timeline ?? [])
       .filter((entry) => !entry.internal)
       .map((entry) => ({

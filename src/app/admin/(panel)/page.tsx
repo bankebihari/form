@@ -7,6 +7,7 @@ import {
   FileCheck2,
   Hourglass,
   PhoneCall,
+  Plus,
   Wallet,
 } from "lucide-react";
 import {
@@ -14,6 +15,7 @@ import {
   LeadTypeBadge,
   StatusBadge,
 } from "@/components/admin/status-badge";
+import { LinkButton } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/primitives";
 import { getDashboardStats } from "@/lib/admin-data";
 import { formatINR, relativeTime } from "@/lib/utils";
@@ -70,13 +72,19 @@ export default async function AdminDashboardPage() {
             {stats.total} in total
           </p>
         </div>
-        <Link
-          href="/admin/applications"
-          className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand-700 hover:text-brand-800"
-        >
-          All applications
-          <ArrowRight className="h-4 w-4" aria-hidden />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/applications"
+            className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand-700 hover:text-brand-800"
+          >
+            All applications
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+          <LinkButton href="/admin/applications/new" size="sm">
+            <Plus className="h-4 w-4" aria-hidden />
+            New request
+          </LinkButton>
+        </div>
       </div>
 
       {/* Action queues */}

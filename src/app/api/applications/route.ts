@@ -19,7 +19,7 @@ import { cleanFilename } from "@/lib/sanitize";
 import { getServiceBySlug } from "@/lib/services";
 import { applicationInputSchema } from "@/lib/validation";
 import { Application } from "@/models/Application";
-import { generateTrackingId } from "@/models/Counter";
+import { generateTrackingId } from "@/lib/tracking-id";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -164,6 +164,11 @@ export async function POST(request: NextRequest) {
         address: input.address,
       },
       requirement: input.requirement,
+      // What they typed becomes the first message, so the thread on their
+      // tracking page starts with their own words.
+      messages: input.requirement
+        ? [{ from: "CLIENT", body: input.requirement, at: new Date() }]
+        : [],
       extra: input.purpose ? { purpose: input.purpose } : {},
       attachments,
       status: "SUBMITTED",

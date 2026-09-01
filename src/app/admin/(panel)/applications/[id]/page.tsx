@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
+  CheckCircle2,
   Eye,
   FileText,
   Mail,
@@ -17,10 +18,12 @@ import {
   QuoteForm,
   StatusForm,
 } from "@/components/admin/application-forms";
+import { ReplyThread } from "@/components/admin/reply-thread";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { WhatsappTemplates } from "@/components/admin/whatsapp-templates";
 import { AnchorButton } from "@/components/ui/button";
 import {
+  Alert,
   Badge,
   Card,
   CardBody,
@@ -35,10 +38,13 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminApplicationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ created?: string }>;
 }) {
   const { id } = await params;
+  const { created } = await searchParams;
   const application = await getApplication(id);
   if (!application) notFound();
 
@@ -57,6 +63,19 @@ export default async function AdminApplicationPage({
         <ArrowLeft className="h-4 w-4" aria-hidden />
         All applications
       </Link>
+
+      {created ? (
+        <Alert
+          tone="success"
+          title={`Request created — Tracking ID ${application.trackingId}`}
+          icon={<CheckCircle2 className="h-5 w-5 text-success-600" aria-hidden />}
+        >
+          Send this ID to the client so they can follow the job themselves. The
+          ready-made message is in <strong>Message the client</strong> below —
+          it opens WhatsApp to +91 {applicant.phone} with the ID and the
+          tracking link already typed.
+        </Alert>
+      ) : null}
 
       {/* Header */}
       <Card className="overflow-hidden">
@@ -120,6 +139,8 @@ export default async function AdminApplicationPage({
 
       <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
         <div className="space-y-5">
+          <ReplyThread application={application} />
+
           <QuoteForm application={application} />
           <PaymentPanel application={application} />
           <DocumentPanel application={application} />

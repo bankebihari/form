@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   XCircle,
 } from "lucide-react";
+import { MessageThread } from "@/components/track/message-thread";
 import { AnchorButton } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import {
@@ -79,7 +80,7 @@ export function TrackResult({
                 {view.trackingId}
               </p>
             </div>
-            <Badge tone={toneToBadge[meta.tone]}>{meta.clientLabel}</Badge>
+            <Badge tone={toneToBadge[meta.tone]}>{meta.label}</Badge>
           </div>
 
           <dl className="mt-4 grid gap-3 border-t border-navy-700 pt-4 text-[13px] sm:grid-cols-3">
@@ -118,7 +119,7 @@ export function TrackResult({
         <CardBody>
           <Alert
             tone={meta.tone === "danger" ? "danger" : meta.tone === "success" ? "success" : meta.tone === "warn" ? "warn" : "info"}
-            title={meta.clientLabel}
+            title={meta.label}
             icon={
               stopped ? (
                 view.status === "CANCELLED" ? (
@@ -187,7 +188,7 @@ export function TrackResult({
                           done || active ? "text-navy-900" : "text-navy-400"
                         )}
                       >
-                        {STATUS_META[status].clientLabel}
+                        {STATUS_META[status].label}
                       </p>
                       {entry ? (
                         <p className="mt-0.5 text-[12.5px] text-muted">
@@ -453,6 +454,9 @@ export function TrackResult({
           )}
         </CardBody>
       </Card>
+
+      {/* --------------------------------------------------------- Messages */}
+      <MessageThread token={token} messages={view.messages ?? []} />
 
       {/* ---------------------------------------------------------- History */}
       {view.timeline.length ? (

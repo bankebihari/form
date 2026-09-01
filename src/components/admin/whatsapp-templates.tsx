@@ -50,7 +50,7 @@ export function WhatsappTemplates({
         ``,
         `You can check the live status any time here:`,
         trackUrl,
-        `(Open the link and enter this Tracking ID with your mobile number ${application.applicant.phone}.)`,
+        `(Open the link and enter this Tracking ID, or just your mobile number ${application.applicant.phone}.)`,
         ``,
         `Please save this message. We will call you shortly to confirm the details and the final price.`,
       ].join("\n"),

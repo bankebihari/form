@@ -58,7 +58,7 @@ export default async function RequestPage({
                     {
                       icon: Clock3,
                       title: "You get a Tracking ID",
-                      body: "Save it. That ID plus your mobile number opens your status page any time.",
+                      body: "Save it. That ID opens your status page any time, and your mobile number works too."
                     },
                     {
                       icon: Lock,

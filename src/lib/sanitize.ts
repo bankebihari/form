@@ -146,8 +146,9 @@ export function cleanTrackingId(value: unknown) {
     .slice(0, TRACKING_ID_MAX);
 }
 
+/** Shape check only - DS-2609-K7Q3XM. Whether it exists is the database's job. */
 export function isValidTrackingId(value: string) {
-  return /^[A-Z]{2}-\d{4}-\d{3,6}$/.test(cleanTrackingId(value));
+  return /^[A-Z]{2}-\d{4}-[A-Z0-9]{4,8}$/.test(cleanTrackingId(value));
 }
 
 /* ------------------------------------------------------------ place names */

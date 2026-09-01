@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Download,
+  Eye,
   Loader2,
   Lock,
   Send,
@@ -31,6 +32,7 @@ import {
   ALL_STATUSES,
   PAYMENT_METHODS,
   STATUS_META,
+  type ApplicationStatus,
 } from "@/lib/constants";
 import { formatDateTime, formatINR } from "@/lib/utils";
 import type { PlainApplication } from "@/types";
@@ -342,19 +344,30 @@ function PaymentBlock({
 
 export function StatusForm({ application }: { application: PlainApplication }) {
   const [state, action] = useActionState(updateStatusAction, idle);
+  const [status, setStatus] = useState<ApplicationStatus>(application.status);
+  const [note, setNote] = useState("");
+
+  const preview = STATUS_META[status];
 
   return (
     <Card>
       <CardHeader
         title="Status"
-        subtitle="Moves the timeline the client sees on their tracking page."
+        subtitle="These are the same steps, in the same words, that the client sees."
       />
       <CardBody>
         <form action={action} className="space-y-4">
           <input type="hidden" name="id" value={application._id} />
 
           <Field label="Set status to" htmlFor="status" required>
-            <Select id="status" name="status" defaultValue={application.status}>
+            <Select
+              id="status"
+              name="status"
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value as ApplicationStatus)
+              }
+            >
               {ALL_STATUSES.map((value) => (
                 <option key={value} value={value}>
                   {STATUS_META[value].label}
@@ -362,6 +375,26 @@ export function StatusForm({ application }: { application: PlainApplication }) {
               ))}
             </Select>
           </Field>
+
+          {/* The exact words the client will read, so there are no surprises. */}
+          <div className="rounded-xl border border-brand-200 bg-brand-50 p-4">
+            <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-brand-700">
+              <Eye className="h-3.5 w-3.5" aria-hidden />
+              What the client will see
+            </p>
+            <p className="mt-2 text-[14.5px] font-bold text-navy-900">
+              {preview.label}
+            </p>
+            <p className="mt-1 text-[13px] leading-relaxed text-navy-700">
+              {preview.description}
+            </p>
+            {note.trim() ? (
+              <p className="mt-2 border-t border-brand-200 pt-2 text-[13px] leading-relaxed text-navy-700">
+                <span className="font-semibold">Your note: </span>
+                {note.trim()}
+              </p>
+            ) : null}
+          </div>
 
           <Field
             label="Note for the client"
@@ -372,6 +405,8 @@ export function StatusForm({ application }: { application: PlainApplication }) {
             <Textarea
               id="statusNote"
               name="note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
               placeholder="e.g. Application submitted at the tehsil office, receipt no. 4821."
               className="min-h-20"
             />

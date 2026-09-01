@@ -9,7 +9,7 @@ import { absoluteUrl } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Track Your Application — Live Status, Preview and Download",
   description:
-    "Enter your Tracking ID and mobile number to see exactly where your document is, view the preview once it is ready, and download the original after the balance is cleared.",
+    "Enter your Tracking ID or the mobile number you gave us to see exactly where your document is, view the preview once it is ready, and download the original after the balance is cleared.",
   alternates: { canonical: absoluteUrl("/track") },
 };
 
@@ -43,7 +43,7 @@ export default async function TrackPage({
       <PageHero
         eyebrow="Track application"
         title="Where is my document?"
-        subtitle="Your Tracking ID and mobile number are all you need. No account, no password."
+        subtitle="Your Tracking ID or your mobile number is all you need. No account, no password."
         crumbs={[{ name: "Track", path: "/track" }]}
       />
 

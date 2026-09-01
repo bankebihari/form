@@ -18,74 +18,68 @@ export const ALL_STATUSES = [
 
 export type ApplicationStatus = (typeof ALL_STATUSES)[number];
 
+/**
+ * One set of words for everyone. Staff pick from exactly the labels the client
+ * reads on their tracking page, so nobody has to translate between "Quoted"
+ * in the panel and "Price confirmed" on the client's screen.
+ */
 type StatusMeta = {
   label: string;
-  /** Shown to the client on the tracking page. */
-  clientLabel: string;
   description: string;
   tone: "neutral" | "info" | "warn" | "success" | "danger";
 };
 
 export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
   SUBMITTED: {
-    label: "Submitted",
-    clientLabel: "Request received",
+    label: "Request received",
     description:
       "We have your request. Our team will call you shortly to confirm details and share the final price.",
     tone: "info",
   },
   QUOTED: {
-    label: "Quoted",
-    clientLabel: "Price confirmed",
+    label: "Price confirmed",
     description:
       "Your price is confirmed. Pay the 10% booking amount over call or WhatsApp and we begin immediately.",
     tone: "warn",
   },
   ADVANCE_PAID: {
-    label: "Advance received",
-    clientLabel: "Booking amount received",
+    label: "Booking amount received",
     description:
       "Thank you. Your 10% booking amount is recorded and your file is now in our work queue.",
     tone: "success",
   },
   IN_PROGRESS: {
-    label: "In progress",
-    clientLabel: "Work in progress",
+    label: "Work in progress",
     description:
       "Our team is preparing and filing your document with the concerned department.",
     tone: "info",
   },
   READY_PREVIEW: {
-    label: "Ready — preview",
-    clientLabel: "Document ready (preview)",
+    label: "Document ready (preview)",
     description:
       "Your document is ready. You can view a watermarked preview here. Clear the remaining 90% to unlock the original download.",
     tone: "warn",
   },
   FULL_PAID: {
-    label: "Full payment received",
-    clientLabel: "Payment complete",
+    label: "Payment complete",
     description:
       "Full payment recorded. Your original document is being released to your tracking page.",
     tone: "success",
   },
   DELIVERED: {
     label: "Delivered",
-    clientLabel: "Delivered",
     description:
       "Your original document is available for download. It stays here for 90 days.",
     tone: "success",
   },
   ON_HOLD: {
     label: "On hold",
-    clientLabel: "On hold",
     description:
       "This request is temporarily paused. Our team will contact you with the reason and next step.",
     tone: "warn",
   },
   CANCELLED: {
     label: "Cancelled",
-    clientLabel: "Cancelled",
     description: "This request was cancelled.",
     tone: "danger",
   },

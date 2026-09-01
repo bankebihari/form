@@ -73,8 +73,8 @@ export default async function RequestSuccessPage({
               title="Save this ID somewhere safe"
               icon={<BellRing className="h-5 w-5 text-warn-600" aria-hidden />}
             >
-              You will need this Tracking ID together with your mobile number to
-              open your status page. Take a screenshot, or send it to yourself on
+              Enter this Tracking ID on our tracking page to see your status at any
+              time. Your mobile number works too, if you lose the ID. Take a screenshot, or send it to yourself on
               WhatsApp using the button below.
             </Alert>
 

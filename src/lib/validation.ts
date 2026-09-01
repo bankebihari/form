@@ -13,7 +13,6 @@ import {
   cleanLine,
   cleanName,
   cleanText,
-  cleanTrackingId,
   isValidEmail,
   isValidName,
   isValidPhone,
@@ -174,16 +173,19 @@ export const leadInputSchema = z.object({
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
 
+/**
+ * One box: people type either the Tracking ID we sent them or the mobile
+ * number they gave us. Which one it is gets worked out in the route.
+ */
 export const trackLookupSchema = z.object({
-  trackingId: z
+  query: z
     .string()
     .max(TRACKING_ID_MAX * 4)
-    .transform(cleanTrackingId)
+    .transform((value) => cleanLine(value, 40))
     .refine(
       (value) => value.length >= 6,
-      "Enter the Tracking ID we sent you, for example DS-2609-0042"
+      "Enter your Tracking ID or the mobile number you gave us"
     ),
-  phone: phoneSchema,
 });
 
 export const adminLoginSchema = z.object({

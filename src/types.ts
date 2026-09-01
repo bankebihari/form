@@ -45,6 +45,14 @@ export type PlainTimelineEntry = {
   at: string;
 };
 
+export type PlainMessage = {
+  from: "CLIENT" | "STAFF";
+  body: string;
+  byName?: string;
+  at: string;
+  readAt?: string;
+};
+
 export type PlainAttachment = {
   fileId: string;
   filename: string;
@@ -94,6 +102,7 @@ export type PlainApplication = {
     lastDownloadedAt?: string;
   };
   timeline: PlainTimelineEntry[];
+  messages: PlainMessage[];
   source: string;
   priority: "NORMAL" | "URGENT";
   assignedTo?: string;
@@ -123,6 +132,15 @@ export type TrackingView = {
     releasedAt?: string;
   };
   timeline: PlainTimelineEntry[];
+  messages: PlainMessage[];
+};
+
+/** Enough to pick between several requests raised from one mobile number. */
+export type TrackingMatch = {
+  trackingId: string;
+  serviceTitle: string;
+  statusLabel: string;
+  createdAt: string;
 };
 
 /** Lead as handed to admin client components. */

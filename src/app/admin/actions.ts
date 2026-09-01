@@ -1,13 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { siteConfig } from "@/config/site";
 import { requireAdmin } from "@/lib/auth";
 import {
   ALL_STATUSES,
+  LEAD_SOURCES,
   PAYMENT_METHODS,
+  UNSPECIFIED_SERVICE_SLUG,
   type ApplicationStatus,
 } from "@/lib/constants";
 import { connectDB } from "@/lib/db";
@@ -16,17 +19,39 @@ import {
   cleanAmount,
   cleanFilename,
   cleanLine,
+  cleanName,
   cleanReference,
   cleanText,
+  isValidPhone,
+  normalisePhone,
 } from "@/lib/sanitize";
 import { buildWatermarkedPreview } from "@/lib/watermark";
 import { Application } from "@/models/Application";
+import { generateTrackingId } from "@/lib/tracking-id";
 import { AdminUser } from "@/models/AdminUser";
 import { Lead } from "@/models/Lead";
 
 export type ActionState = { ok: boolean; message: string };
 
 const idSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid record id");
+
+/**
+ * Pulls the named fields out of a FormData as plain strings, with anything
+ * missing becoming "".
+ *
+ * An unchecked checkbox or an absent input simply does not appear in a
+ * FormData, and a schema that assumes the key is there fails with an unhelpful
+ * "expected nonoptional, received undefined". Normalising here keeps every
+ * schema below dealing with plain strings.
+ */
+function fields<K extends string>(formData: FormData, keys: readonly K[]) {
+  const out = {} as Record<K, string>;
+  for (const key of keys) {
+    const value = formData.get(key);
+    out[key] = typeof value === "string" ? value : "";
+  }
+  return out;
+}
 
 function done(message: string): ActionState {
   return { ok: true, message };
@@ -42,6 +67,128 @@ function refresh(id?: string) {
   if (id) revalidatePath(`/admin/applications/${id}`);
 }
 
+/* ------------------------------------------------- create from the panel */
+
+/**
+ * Raise a request on someone's behalf: a walk-in, a phone call, a WhatsApp
+ * message. Only a mobile number and a title are needed. The Tracking ID that
+ * comes back is what you send them, and it is all they need (with this number)
+ * to follow the job themselves.
+ */
+export async function createApplicationAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = z
+    .object({
+      phone: z
+        .string()
+        .transform((value) => normalisePhone(value))
+        .refine(isValidPhone, "Enter a valid 10-digit mobile number"),
+      title: z
+        .string()
+        .transform((value) => cleanLine(value, 120))
+        .refine((value) => value.length >= 3, "Write what the work is"),
+      name: z.string().transform((value) => cleanName(value)),
+      serviceSlug: z
+        .string()
+        .transform((value) => cleanLine(value, 80).toLowerCase())
+        .refine(
+          (value) => value === "" || /^[a-z0-9-]{2,80}$/.test(value),
+          "Choose a service from the list"
+        ),
+      source: z
+        .string()
+        .transform((value) =>
+          ((LEAD_SOURCES as readonly string[]).includes(value)
+            ? value
+            : "WHATSAPP") as (typeof LEAD_SOURCES)[number]
+        ),
+      totalAmount: z.string().transform((value) => cleanAmount(value)),
+      note: z.string().transform((value) => cleanText(value, 800)),
+      urgent: z
+        .string()
+        .transform((value) => value === "on" || value === "true"),
+    })
+    .safeParse(fields(formData, ["phone","title","name","serviceSlug","source","totalAmount","note","urgent"] as const));
+
+  if (!parsed.success) {
+    return problem(parsed.error.issues[0]?.message ?? "Check the details.");
+  }
+
+  const input = parsed.data;
+
+  await connectDB();
+
+  const trackingId = await generateTrackingId();
+  const now = new Date();
+
+  const application = await Application.create({
+    trackingId,
+    service: {
+      slug: input.serviceSlug || UNSPECIFIED_SERVICE_SLUG,
+      title: input.title,
+    },
+    applicant: {
+      // A name is nice to have, but the phone number is what identifies them.
+      name: input.name || "Client",
+      phone: input.phone,
+    },
+    requirement: input.note,
+    // Their own words start the conversation, so the thread reads in order.
+    messages: input.note
+      ? [{ from: "CLIENT" as const, body: input.note, at: now }]
+      : [],
+    status: "SUBMITTED",
+    priority: input.urgent ? "URGENT" : "NORMAL",
+    source: input.source,
+    timeline: [
+      {
+        status: "SUBMITTED",
+        title: "Request received",
+        note: `Raised by our team for ${input.title}.`,
+        by: session.name,
+        at: now,
+      },
+    ],
+  });
+
+  // A price given up front saves a second visit to this screen.
+  if (input.totalAmount > 0) {
+    const advance = Math.round(
+      (input.totalAmount * siteConfig.advancePercent) / 100
+    );
+    application.quote = {
+      totalAmount: input.totalAmount,
+      governmentFee: 0,
+      notes: "",
+      quotedAt: now,
+    };
+    application.payments.advance.amount = advance;
+    application.payments.balance.amount = Math.max(
+      input.totalAmount - advance,
+      0
+    );
+    application.status = "QUOTED";
+    application.timeline.push({
+      status: "QUOTED",
+      title: "Price confirmed",
+      note: `Total ${input.totalAmount}. Booking ${advance}, balance ${
+        input.totalAmount - advance
+      }.`,
+      by: session.name,
+      at: now,
+    });
+    await application.save();
+  }
+
+  refresh();
+  // Straight to the record, where the "Send the Tracking ID" message is ready.
+  redirect(`/admin/applications/${application._id}?created=1`);
+}
+
 /* ------------------------------------------------------------------ quote */
 
 export async function setQuoteAction(
@@ -53,13 +200,11 @@ export async function setQuoteAction(
   const parsed = z
     .object({
       id: idSchema,
-      totalAmount: z.unknown().transform((value) => cleanAmount(value)),
-      governmentFee: z.unknown().transform((value) => cleanAmount(value)),
-      notes: z
-        .unknown()
-        .transform((value) => cleanText(typeof value === "string" ? value : "", 600)),
+      totalAmount: z.string().transform((value) => cleanAmount(value)),
+      governmentFee: z.string().transform((value) => cleanAmount(value)),
+      notes: z.string().transform((value) => cleanText(value, 600)),
     })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","totalAmount","governmentFee","notes"] as const));
 
   if (!parsed.success) return problem("Enter a valid amount.");
   const { id, totalAmount, governmentFee, notes } = parsed.data;
@@ -116,14 +261,12 @@ export async function recordPaymentAction(
     .object({
       id: idSchema,
       which: z.enum(["advance", "balance"]),
-      amount: z.unknown().transform((value) => cleanAmount(value)),
+      amount: z.string().transform((value) => cleanAmount(value)),
       method: z.enum(PAYMENT_METHODS),
-      reference: z.unknown().transform((value) => cleanReference(value)),
-      note: z
-        .unknown()
-        .transform((value) => cleanText(typeof value === "string" ? value : "", 300)),
+      reference: z.string().transform((value) => cleanReference(value)),
+      note: z.string().transform((value) => cleanText(value, 300)),
     })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","which","amount","method","reference","note"] as const));
 
   if (!parsed.success) return problem("Check the payment details and try again.");
   const { id, which, amount, method, reference, note } = parsed.data;
@@ -182,7 +325,7 @@ export async function clearPaymentAction(
 
   const parsed = z
     .object({ id: idSchema, which: z.enum(["advance", "balance"]) })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","which"] as const));
   if (!parsed.success) return problem("Could not undo that payment.");
 
   await connectDB();
@@ -228,11 +371,9 @@ export async function updateStatusAction(
     .object({
       id: idSchema,
       status: z.enum(ALL_STATUSES),
-      note: z
-        .unknown()
-        .transform((value) => cleanText(typeof value === "string" ? value : "", 600)),
+      note: z.string().transform((value) => cleanText(value, 600)),
     })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","status","note"] as const));
 
   if (!parsed.success) return problem("Pick a valid status.");
   const { id, status, note } = parsed.data;
@@ -276,6 +417,60 @@ function statusTitle(status: ApplicationStatus) {
   return titles[status];
 }
 
+/* --------------------------------------------------------------- replies */
+
+/** A staff reply in the thread the client sees on their tracking page. */
+export async function replyToClientAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const parsed = z
+    .object({
+      id: idSchema,
+      body: z
+        .string()
+        .transform((value) => cleanText(value, 1200))
+        .refine((value) => value.length >= 2, "Write a message first"),
+    })
+    .safeParse(fields(formData, ["id", "body"] as const));
+
+  if (!parsed.success) {
+    return problem(parsed.error.issues[0]?.message ?? "Write a message first.");
+  }
+
+  await connectDB();
+  const now = new Date();
+
+  // Marking the client's messages read has to be a separate update: MongoDB
+  // refuses a $push and an arrayFilters $set on the same path in one command.
+  const marked = await Application.updateOne(
+    { _id: parsed.data.id },
+    { $set: { "messages.$[unread].readAt": now } },
+    { arrayFilters: [{ "unread.from": "CLIENT", "unread.readAt": null }] }
+  );
+
+  if (!marked.matchedCount) return problem("Application not found.");
+
+  await Application.updateOne(
+    { _id: parsed.data.id },
+    {
+      $push: {
+        messages: {
+          from: "STAFF",
+          body: parsed.data.body,
+          byName: session.name,
+          at: now,
+        },
+      },
+    }
+  );
+
+  refresh(parsed.data.id);
+  return done("Reply sent. The client sees it on their tracking page.");
+}
+
 /* ------------------------------------------------------------------- note */
 
 export async function addNoteAction(
@@ -288,17 +483,15 @@ export async function addNoteAction(
     .object({
       id: idSchema,
       title: z
-        .unknown()
-        .transform((value) => cleanLine(typeof value === "string" ? value : "", 120))
+        .string()
+        .transform((value) => cleanLine(value, 120))
         .refine((value) => value.length >= 2, "Write a short title"),
-      note: z
-        .unknown()
-        .transform((value) => cleanText(typeof value === "string" ? value : "", 800)),
+      note: z.string().transform((value) => cleanText(value, 800)),
       internal: z
         .union([z.literal("on"), z.literal("true"), z.literal("")])
         .optional(),
     })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","title","note","internal"] as const));
 
   if (!parsed.success) return problem("Write a short title for the update.");
   const { id, title, note, internal } = parsed.data;
@@ -429,7 +622,7 @@ export async function releaseDocumentAction(
 
   const parsed = z
     .object({ id: idSchema, force: z.string().optional() })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","force"] as const));
   if (!parsed.success) return problem("Invalid application.");
 
   await connectDB();
@@ -472,7 +665,7 @@ export async function lockDocumentAction(
 ): Promise<ActionState> {
   const session = await requireAdmin();
 
-  const parsed = z.object({ id: idSchema }).safeParse(Object.fromEntries(formData));
+  const parsed = z.object({ id: idSchema }).safeParse(fields(formData, ["id"] as const));
   if (!parsed.success) return problem("Invalid application.");
 
   await connectDB();
@@ -513,11 +706,9 @@ export async function updateLeadAction(
     .object({
       id: idSchema,
       status: z.enum(["NEW", "CONTACTED", "CONVERTED", "CLOSED"]),
-      adminNote: z
-        .unknown()
-        .transform((value) => cleanText(typeof value === "string" ? value : "", 600)),
+      adminNote: z.string().transform((value) => cleanText(value, 600)),
     })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["id","status","adminNote"] as const));
 
   if (!parsed.success) return problem("Could not update that lead.");
 
@@ -559,7 +750,7 @@ export async function changePasswordAction(
         .regex(/\d/, "Include a number"),
       confirmPassword: z.string(),
     })
-    .safeParse(Object.fromEntries(formData));
+    .safeParse(fields(formData, ["currentPassword","newPassword","confirmPassword"] as const));
 
   if (!parsed.success) {
     return problem(parsed.error.issues[0]?.message ?? "Check the form.");

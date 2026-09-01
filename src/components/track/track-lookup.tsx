@@ -1,45 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Loader2, MessageCircle, Search } from "lucide-react";
+import { AlertCircle, ChevronRight, Loader2, MessageCircle, Search } from "lucide-react";
 import { TrackResult } from "@/components/track/track-result";
 import { AnchorButton, Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
-import { Alert, Card, CardBody } from "@/components/ui/primitives";
+import { Alert, Badge, Card, CardBody } from "@/components/ui/primitives";
 import { siteConfig, whatsappLink } from "@/config/site";
-import {
-  TRACKING_ID_MAX,
-  cleanTrackingId,
-  isValidPhone,
-  phoneInputValue,
-} from "@/lib/sanitize";
-import type { TrackingView } from "@/types";
+import { formatDate } from "@/lib/utils";
+import type { TrackingMatch, TrackingView } from "@/types";
 
 export function TrackLookup({ initialId = "" }: { initialId?: string }) {
-  const [trackingId, setTrackingId] = useState(cleanTrackingId(initialId));
-  const [phone, setPhone] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState("");
+  const [query, setQuery] = useState(initialId);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [matches, setMatches] = useState<TrackingMatch[] | null>(null);
   const [result, setResult] = useState<{
     view: TrackingView;
     token: string;
   } | null>(null);
 
-  async function lookup(event: React.FormEvent) {
-    event.preventDefault();
-    setErrors({});
-    setFormError("");
+  async function lookup(value: string) {
+    setError("");
+    setMatches(null);
 
-    const next: Record<string, string> = {};
-    if (cleanTrackingId(trackingId).length < 6) {
-      next.trackingId = "Enter the Tracking ID we sent you (e.g. DS-2609-0042)";
-    }
-    if (!isValidPhone(phone)) {
-      next.phone = "Enter the 10-digit mobile number used on the request";
-    }
-    if (Object.keys(next).length) {
-      setErrors(next);
+    if (value.trim().length < 6) {
+      setError("Enter your Tracking ID or the mobile number you gave us.");
       return;
     }
 
@@ -48,20 +34,23 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
       const response = await fetch("/api/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackingId: trackingId.trim(), phone }),
+        body: JSON.stringify({ query: value.trim() }),
       });
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        setErrors(payload.errors ?? {});
-        setFormError(payload.message ?? "We could not find that application.");
+        setError(payload.message ?? "We could not find that.");
         return;
       }
 
-      setResult({ view: payload.data.view, token: payload.data.token });
+      if (payload.data.matches) {
+        setMatches(payload.data.matches);
+      } else {
+        setResult({ view: payload.data.view, token: payload.data.token });
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
-      setFormError(
+      setError(
         "We could not reach the server. Check your connection and try again."
       );
     } finally {
@@ -76,8 +65,8 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
         token={result.token}
         onReset={() => {
           setResult(null);
-          setPhone("");
-          setTrackingId("");
+          setMatches(null);
+          setQuery("");
         }}
       />
     );
@@ -90,69 +79,47 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
           Check your application
         </h2>
         <p className="mt-1 text-[14px] text-muted">
-          Enter the Tracking ID we gave you along with the mobile number you
-          used. No password needed.
+          Enter your Tracking ID, or just the mobile number you gave us. Either
+          one works — no password needed.
         </p>
 
-        {formError ? (
+        {error ? (
           <Alert
             tone="danger"
             className="mt-4"
             icon={<AlertCircle className="h-5 w-5 text-danger-600" />}
           >
-            {formError}
+            {error}
           </Alert>
         ) : null}
 
-        <form onSubmit={lookup} className="mt-5 space-y-4" noValidate>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void lookup(query);
+          }}
+          className="mt-5 space-y-4"
+          noValidate
+        >
           <Field
-            label="Tracking ID"
-            htmlFor="trackingId"
+            label="Tracking ID or mobile number"
+            htmlFor="trackQuery"
             required
-            error={errors.trackingId}
+            help="For example DS-2609-K7Q3XM, or 98765 43210."
           >
             <Input
-              id="trackingId"
-              name="trackingId"
-              value={trackingId}
-              onChange={(event) =>
-                setTrackingId(cleanTrackingId(event.target.value))
-              }
-              maxLength={TRACKING_ID_MAX}
-              placeholder="DS-2609-0042"
+              id="trackQuery"
+              name="query"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="DS-2609-K7Q3XM  or  98765 43210"
               autoCapitalize="characters"
               autoComplete="off"
               spellCheck={false}
-              className="font-display tracking-[0.08em]"
-              invalid={Boolean(errors.trackingId)}
+              maxLength={40}
+              className="font-display tracking-[0.04em]"
+              invalid={Boolean(error)}
             />
-          </Field>
-
-          <Field
-            label="Mobile number"
-            htmlFor="trackPhone"
-            required
-            error={errors.phone}
-            help="The number you gave when raising the request."
-          >
-            <div className="flex">
-              <span className="flex items-center rounded-l-xl border border-r-0 border-navy-200 bg-navy-50 px-3.5 text-[15px] font-semibold text-navy-700">
-                +91
-              </span>
-              <Input
-                id="trackPhone"
-                name="phone"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                maxLength={12}
-                value={phone}
-                onChange={(event) => setPhone(phoneInputValue(event.target.value))}
-                placeholder="98765 43210"
-                className="rounded-l-none"
-                invalid={Boolean(errors.phone)}
-              />
-            </div>
           </Field>
 
           <Button type="submit" size="lg" className="w-full" disabled={loading}>
@@ -169,6 +136,49 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
             )}
           </Button>
         </form>
+
+        {/* One number can have several requests, so let them pick. */}
+        {matches?.length ? (
+          <div className="mt-6 border-t border-line pt-5">
+            <p className="text-[14px] font-semibold text-navy-900">
+              You have {matches.length} requests with us
+            </p>
+            <p className="mt-0.5 text-[13px] text-muted">
+              Choose the one you want to see.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {matches.map((match) => (
+                <li key={match.trackingId}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery(match.trackingId);
+                      void lookup(match.trackingId);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl border border-line bg-white p-3.5 text-left transition-colors hover:border-brand-300 hover:bg-brand-50"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-display text-[13px] font-extrabold tracking-[0.04em] text-navy-900">
+                        {match.trackingId}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[13.5px] text-navy-800">
+                        {match.serviceTitle}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-muted">
+                        Raised {formatDate(match.createdAt)}
+                      </span>
+                    </span>
+                    <Badge tone="info">{match.statusLabel}</Badge>
+                    <ChevronRight
+                      className="h-4 w-4 shrink-0 text-navy-300"
+                      aria-hidden
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="mt-5 border-t border-line pt-4">
           <p className="text-[13px] text-muted">

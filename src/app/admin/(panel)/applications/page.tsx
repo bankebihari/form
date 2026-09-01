@@ -6,10 +6,12 @@ import {
   FileStack,
   MessageCircle,
   Phone,
+  Plus,
   Search,
 } from "lucide-react";
+import { QuickEditDialog } from "@/components/admin/quick-edit-dialog";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
 import { Badge, Card, CardBody } from "@/components/ui/primitives";
 import { callTo, whatsappTo } from "@/config/site";
@@ -42,16 +44,22 @@ export default async function AdminApplicationsPage({
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-[24px] font-extrabold text-navy-900 sm:text-[28px]">
-          Applications
-        </h1>
-        <p className="mt-1 text-[14px] text-muted">
-          {result.total} record{result.total === 1 ? "" : "s"}
-          {status !== "ALL"
-            ? ` · ${STATUS_META[status as keyof typeof STATUS_META]?.label ?? status}`
-            : ""}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[24px] font-extrabold text-navy-900 sm:text-[28px]">
+            Applications
+          </h1>
+          <p className="mt-1 text-[14px] text-muted">
+            {result.total} record{result.total === 1 ? "" : "s"}
+            {status !== "ALL"
+              ? ` · ${STATUS_META[status as keyof typeof STATUS_META]?.label ?? status}`
+              : ""}
+          </p>
+        </div>
+        <LinkButton href="/admin/applications/new">
+          <Plus className="h-4 w-4" aria-hidden />
+          New request
+        </LinkButton>
       </div>
 
       {/* Filters work without JavaScript: a plain GET form. */}
@@ -96,11 +104,14 @@ export default async function AdminApplicationsPage({
           {/* Mobile: cards. Desktop: table. */}
           <div className="space-y-3 lg:hidden">
             {result.items.map((application) => (
-              <Link
+              <div
                 key={application._id}
-                href={`/admin/applications/${application._id}`}
-                className="block rounded-[14px] border border-line bg-white p-4 shadow-soft"
+                className="rounded-[14px] border border-line bg-white p-4 shadow-soft"
               >
+                <Link
+                  href={`/admin/applications/${application._id}`}
+                  className="block"
+                >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-display text-[14px] font-extrabold tracking-[0.04em] text-navy-900">
@@ -115,17 +126,21 @@ export default async function AdminApplicationsPage({
                   </div>
                   <StatusBadge status={application.status} />
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-line pt-3 text-[12.5px]">
+                </Link>
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 text-[12.5px]">
                   <span className="text-muted">
                     {relativeTime(application.createdAt)}
                   </span>
-                  <span className="font-semibold text-navy-900">
-                    {application.quote?.totalAmount
-                      ? formatINR(application.quote.totalAmount)
-                      : "Not priced"}
+                  <span className="flex items-center gap-2.5">
+                    <span className="font-semibold text-navy-900">
+                      {application.quote?.totalAmount
+                        ? formatINR(application.quote.totalAmount)
+                        : "Not priced"}
+                    </span>
+                    <QuickEditDialog application={application} />
                   </span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 
@@ -206,6 +221,7 @@ export default async function AdminApplicationsPage({
                           >
                             <MessageCircle className="h-4 w-4" aria-hidden />
                           </a>
+                          <QuickEditDialog application={application} />
                         </span>
                       </td>
                     </tr>
