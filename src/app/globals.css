@@ -1,26 +1,270 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   DocSeva design tokens — "bank-grade trust"
+   Deep navy + institutional blue + a restrained gold accent.
+   Light surface only: financial products do not flip to dark on people.
+   ========================================================================== */
+
+@theme {
+  /* Institutional blue — primary action colour */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93b8fb;
+  --color-brand-400: #5b8def;
+  --color-brand-500: #2f6fe4;
+  --color-brand-600: #1552c4;
+  --color-brand-700: #0f3f9c;
+  --color-brand-800: #0d3379;
+  --color-brand-900: #0b2559;
+
+  /* Navy — headers, footers, deep surfaces */
+  --color-navy-50: #f4f7fb;
+  --color-navy-100: #e6edf6;
+  --color-navy-200: #c7d6e8;
+  --color-navy-300: #93aecd;
+  --color-navy-400: #5b7fa8;
+  --color-navy-500: #365d88;
+  --color-navy-600: #22456a;
+  --color-navy-700: #163353;
+  --color-navy-800: #0e2440;
+  --color-navy-900: #08182d;
+  --color-navy-950: #050f1d;
+
+  /* Gold — used sparingly for premium / verified marks */
+  --color-gold-100: #fbf3dd;
+  --color-gold-300: #e8cf8f;
+  --color-gold-500: #c9a227;
+  --color-gold-600: #a8871d;
+
+  /* Semantic */
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-500: #12a35c;
+  --color-success-600: #0f7b4f;
+  --color-success-700: #0a5c3b;
+
+  --color-warn-50: #fffaeb;
+  --color-warn-100: #fef0c7;
+  --color-warn-500: #d99206;
+  --color-warn-600: #b45309;
+  --color-warn-700: #92400e;
+
+  --color-danger-50: #fef3f2;
+  --color-danger-100: #fee4e2;
+  --color-danger-500: #d92d20;
+  --color-danger-600: #b42318;
+
+  --color-ink: #0d1b2a;
+  --color-muted: #5b6b7f;
+  --color-line: #e3e9f0;
+  --color-surface: #ffffff;
+  --color-canvas: #f6f8fb;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif,
+    system-ui, sans-serif;
+
+  --radius-card: 14px;
+
+  --shadow-soft: 0 1px 2px rgba(13, 27, 42, 0.04),
+    0 8px 24px -12px rgba(13, 27, 42, 0.14);
+  --shadow-lift: 0 2px 4px rgba(13, 27, 42, 0.05),
+    0 18px 40px -18px rgba(13, 27, 42, 0.28);
+
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes shimmer {
+  from {
+    background-position: -400px 0;
+  }
+  to {
+    background-position: 400px 0;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Never let a mobile browser zoom on focus: 16px minimum on inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--color-brand-100);
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    margin-inline: auto;
+    max-width: 1200px;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Fine grid used behind light hero sections — reads as "secure ledger" */
+  .bg-grid-ink {
+    background-image: linear-gradient(
+        to right,
+        rgba(13, 51, 121, 0.055) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(13, 51, 121, 0.055) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* Same grid for the few surfaces that stay dark */
+  .bg-grid {
+    background-image: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.06) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+
+  /* Long-form legal / informational copy */
+  .prose-doc {
+    color: var(--color-ink);
+    font-size: 15.5px;
+    line-height: 1.75;
+  }
+  .prose-doc > * + * {
+    margin-top: 1rem;
+  }
+  .prose-doc h2 {
+    margin-top: 2.25rem;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--color-navy-900);
+  }
+  .prose-doc h3 {
+    margin-top: 1.5rem;
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+  .prose-doc p,
+  .prose-doc li {
+    color: #3b4c60;
+  }
+  .prose-doc ul,
+  .prose-doc ol {
+    padding-left: 1.15rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .prose-doc ul {
+    list-style: disc;
+  }
+  .prose-doc ol {
+    list-style: decimal;
+  }
+  .prose-doc strong {
+    color: var(--color-navy-900);
+    font-weight: 700;
+  }
+  .prose-doc a {
+    color: var(--color-brand-700);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-doc table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+  .prose-doc th,
+  .prose-doc td {
+    border: 1px solid var(--color-line);
+    padding: 0.65rem 0.8rem;
+    text-align: left;
+  }
+  .prose-doc th {
+    background: var(--color-canvas);
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-navy-100) 25%,
+      #f2f6fb 50%,
+      var(--color-navy-100) 75%
+    );
+    background-size: 800px 100%;
+    animation: var(--animate-shimmer);
+  }
+}
+
+/* Space for the sticky mobile action bar so nothing hides behind it */
+@media (max-width: 767px) {
+  body.has-mobile-bar {
+    padding-bottom: 76px;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }
