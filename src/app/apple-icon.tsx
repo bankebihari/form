@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { siteConfig } from "@/config/site";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -20,7 +21,8 @@ export default function AppleIcon() {
           fontFamily: "sans-serif",
         }}
       >
-        D
+        {/* Derived from the brand name so a rename cannot leave a stale letter. */}
+        {siteConfig.name.charAt(0)}
       </div>
     ),
     size

@@ -105,14 +105,14 @@ export function TrackLookup({ initialId = "" }: { initialId?: string }) {
             label="Tracking ID or mobile number"
             htmlFor="trackQuery"
             required
-            help="For example DS-2609-K7Q3XM, or 98765 43210."
+            help="For example OCC-2609-K7Q3XM, or 98765 43210."
           >
             <Input
               id="trackQuery"
               name="query"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="DS-2609-K7Q3XM  or  98765 43210"
+              placeholder="OCC-2609-K7Q3XM  or  98765 43210"
               autoCapitalize="characters"
               autoComplete="off"
               spellCheck={false}

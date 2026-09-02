@@ -38,7 +38,7 @@ import { absoluteUrl, faqJsonLd, howToJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   // absolute: the home page is the one title that should not get the
-  // "| DocSeva" suffix appended by the root template.
+  // brand suffix appended by the root template.
   title: {
     absolute: `${siteConfig.name} — Apply for Government Documents Online, Pay Only 10% to Start`,
   },
@@ -330,7 +330,7 @@ export default async function HomePage() {
             <div className="rounded-2xl border border-line bg-white p-4 shadow-lift">
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <span className="text-[12.5px] font-bold text-navy-900">
-                  DS-2609-0184
+                  OCC-2609-K7Q3XM
                 </span>
                 <Badge tone="warn">Awaiting balance</Badge>
               </div>

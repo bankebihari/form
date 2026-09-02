@@ -7,9 +7,16 @@
 
 export const siteConfig = {
   // --- Brand -------------------------------------------------
-  name: "DocSeva",
-  legalName: "DocSeva Document Services",
+  name: "Online Cyber Cafe",
+  legalName: "Online Cyber Cafe",
   tagline: "Government documents, done for you.",
+
+  /**
+   * Leads every Tracking ID: OCC-2609-K7Q3XM. Two to four letters. Changing it
+   * only affects new IDs - the ones already given to clients keep working,
+   * because lookups match the shape, not this exact prefix.
+   */
+  trackingPrefix: "OCC",
   description:
     "Apply for caste certificate, income certificate, domicile, PAN, passport, affidavits and more without standing in queues. Raise a request online, track it live, pay only 10% to start.",
 
@@ -18,7 +25,7 @@ export const siteConfig = {
   whatsappNumber: "917707026152", // 91 + 10 digit number
   phoneNumber: "+91 77070 26152", // shown on the website
   phoneDial: "+917707026152", // used inside tel: links
-  email: "support@docseva.in",
+  email: "support@onlinecybercafe.in",
 
   address: {
     line1: "Shop No. 12, Main Market Road",
@@ -32,13 +39,13 @@ export const siteConfig = {
   hours: "Mon – Sat, 9:00 AM – 8:00 PM",
 
   // --- Web ---------------------------------------------------
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://docseva.in",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://onlinecybercafe.in",
   ogImage: "/og",
 
   social: {
-    youtube: "https://youtube.com/@docseva",
-    instagram: "https://instagram.com/docseva",
-    facebook: "https://facebook.com/docseva",
+    youtube: "https://youtube.com/@onlinecybercafe",
+    instagram: "https://instagram.com/onlinecybercafe",
+    facebook: "https://facebook.com/onlinecybercafe",
   },
 
   // --- Commercial model --------------------------------------

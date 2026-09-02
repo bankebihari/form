@@ -13,6 +13,7 @@ import {
   MAX_UPLOAD_FILES,
   MAX_UPLOAD_TOTAL_BYTES,
 } from "@/lib/constants";
+import { siteConfig } from "@/config/site";
 import { connectDB } from "@/lib/db";
 import { uploadBuffer } from "@/lib/gridfs";
 import { UNSPECIFIED_SERVICE_SLUG } from "@/lib/constants";
@@ -73,7 +74,9 @@ export async function POST(request: NextRequest) {
     const input = parsed.data;
 
     // Honeypot: quietly accept so the bot does not learn anything useful.
-    if (input.website) return ok({ trackingId: "DS-0000-0000" });
+    if (input.website) {
+      return ok({ trackingId: `${siteConfig.trackingPrefix}-0000-000000` });
+    }
 
     // No service chosen is a valid request: our team decides on the call.
     const service = input.serviceSlug

@@ -21,15 +21,14 @@ survives WhatsApp's circular crop. If you ever need a bigger version there is
 ## Business name
 
 ```
-DocSeva - Document Services
+Online Cyber Cafe
 ```
 
 Keep it under 75 characters. This is the name people see before they know you,
 so it should say what you do, not just what you are called.
 
-> Still your call: "DocSeva" is the name currently written into the website. If
-> you want a different one, change `name` and `legalName` in
-> `src/config/site.ts` and tell me — I will regenerate the logo to match.
+> The name people search for is exactly this, which is the point. It reads as a
+> service rather than a brand nobody knows yet.
 
 ---
 
@@ -80,7 +79,7 @@ Documents done for you. 10% to start, see it before you pay the rest. Mon-Sat 9-
 | --- | --- |
 | Address | Shop No. 12, Main Market Road, Near Bus Stand, Indore, Madhya Pradesh 452001 |
 | Hours | Monday to Saturday, 9:00 AM - 8:00 PM. Sunday closed |
-| Email | support@docseva.in |
+| Email | support@onlinecybercafe.in |
 | Website | https://docseva-in.netlify.app |
 
 **These are still the placeholders from the website.** Replace the address and
@@ -95,7 +94,7 @@ it there keeps everything consistent.
 Sent automatically to anyone messaging you for the first time.
 
 ```
-Namaste, thank you for contacting DocSeva.
+Namaste, thank you for contacting Online Cyber Cafe.
 
 Tell us which document you need and your city, and we will reply with the exact
 papers required, the price and the time it takes.

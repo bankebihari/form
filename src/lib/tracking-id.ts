@@ -1,10 +1,11 @@
 import { randomInt } from "node:crypto";
+import { siteConfig } from "@/config/site";
 import { connectDB } from "@/lib/db";
 import { Application } from "@/models/Application";
 
 /**
- * Tracking IDs look like DS-2609-K7Q3XM: the brand, the month it was raised,
- * and six random characters.
+ * Tracking IDs look like OCC-2609-K7Q3XM: the brand prefix, the month it was
+ * raised, and six random characters.
  *
  * The random part matters. The ID on its own is enough to open a tracking
  * page, so a running sequence (0001, 0002, ...) would let anyone read the next
@@ -26,8 +27,13 @@ function randomBlock() {
   return out;
 }
 
+/**
+ * Accepts 2 to 4 leading letters so IDs issued under an earlier brand prefix
+ * keep resolving. Nobody should be told their Tracking ID stopped working
+ * because we renamed the business.
+ */
 export function trackingIdPattern() {
-  return new RegExp(`^[A-Z]{2}-\\d{4}-[${ALPHABET}]{${RANDOM_LENGTH}}$`);
+  return new RegExp(`^[A-Z]{2,4}-\\d{4}-[${ALPHABET}]{${RANDOM_LENGTH}}$`);
 }
 
 export async function generateTrackingId() {
@@ -40,7 +46,7 @@ export async function generateTrackingId() {
 
   // A collision is vanishingly unlikely, but cheap to rule out.
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const candidate = `DS-${period}-${randomBlock()}`;
+    const candidate = `${siteConfig.trackingPrefix}-${period}-${randomBlock()}`;
     const clash = await Application.exists({ trackingId: candidate });
     if (!clash) return candidate;
   }
