@@ -137,7 +137,7 @@ export default async function RequestSuccessPage({
                 },
                 {
                   title: `You see the document, then pay ${siteConfig.balancePercent}%`,
-                  body: "The finished document appears as a preview first. The original unlocks once the balance is confirmed.",
+                  body: "We tell you the moment it is ready. It unlocks for download once the balance is confirmed.",
                 },
               ].map((step, index) => (
                 <li key={step.title} className="flex gap-3.5">

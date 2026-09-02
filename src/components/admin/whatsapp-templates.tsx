@@ -33,6 +33,8 @@ export function WhatsappTemplates({
   const id = application.trackingId;
   const trackUrl = `${siteConfig.url}/track?id=${id}`;
   const total = application.quote?.totalAmount ?? 0;
+  const governmentFee = application.quote?.governmentFee ?? 0;
+  const serviceCharge = application.quote?.serviceCharge ?? 0;
   const advance = application.payments.advance;
   const balance = application.payments.balance;
 
@@ -63,10 +65,20 @@ export function WhatsappTemplates({
       body: [
         `Namaste ${name},`,
         ``,
-        `For your ${service} (Tracking ID ${id}) the total is ${formatINR(total)}.`,
+        `For your ${service} (Tracking ID ${id}):`,
         ``,
-        `To begin, only ${siteConfig.advancePercent}% is payable now: ${formatINR(advance.amount)}`,
-        `The remaining ${formatINR(balance.amount)} is due only after your document is ready and you have seen it.`,
+        ...(governmentFee > 0
+          ? [`Government fee: ${formatINR(governmentFee)} (paid to the department, at actuals)`]
+          : []),
+        `Our service charge: ${formatINR(serviceCharge)}`,
+        `Total: ${formatINR(total)}`,
+        ``,
+        `To begin, please pay ${formatINR(advance.amount)}.`,
+        governmentFee > 0
+          ? `That is the ${formatINR(governmentFee)} government fee in full, plus ${siteConfig.advancePercent}% of our ${formatINR(serviceCharge)} charge. We never take a percentage of the government fee.`
+          : `That is ${siteConfig.advancePercent}% of our ${formatINR(serviceCharge)} charge.`,
+        ``,
+        `The remaining ${formatINR(balance.amount)} is due only once your document is ready.`,
         ``,
         `You can see this on your tracking page: ${trackUrl}`,
         ``,
@@ -87,18 +99,18 @@ export function WhatsappTemplates({
     },
     {
       key: "ready",
-      label: "Document is ready — preview",
+      label: "Document is ready",
       when: "After you upload the finished document",
       recommended: application.status === "READY_PREVIEW",
       body: [
         `Good news ${name}, your ${service} is ready.`,
         ``,
-        `Open your tracking page to see it: ${trackUrl}`,
+        `Open your tracking page to see the details: ${trackUrl}`,
         `Tracking ID: ${id}`,
         ``,
-        `Please check the name, spelling and dates carefully. If anything is wrong, tell me and we will correct it before you pay anything more.`,
+        `If anything on it needs correcting, tell me and we will put it right.`,
         ``,
-        `Once you are happy, the balance of ${formatINR(balance.amount)} is due and the original file unlocks for download immediately.`,
+        `The balance of ${formatINR(balance.amount)} is now due. As soon as we confirm it, the file unlocks for download immediately.`,
       ].join("\n"),
     },
     {

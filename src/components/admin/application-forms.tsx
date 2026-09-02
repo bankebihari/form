@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Alert, Card, CardBody, CardHeader } from "@/components/ui/primitives";
 import { siteConfig } from "@/config/site";
+import { computeQuote } from "@/lib/pricing";
 import {
   ALL_STATUSES,
   PAYMENT_METHODS,
@@ -94,13 +95,14 @@ function Result({ state }: { state: ActionState }) {
 
 export function QuoteForm({ application }: { application: PlainApplication }) {
   const [state, action] = useActionState(setQuoteAction, idle);
-  const [total, setTotal] = useState(
-    application.quote?.totalAmount ? String(application.quote.totalAmount) : ""
+  const [service, setService] = useState(
+    application.quote?.serviceCharge ? String(application.quote.serviceCharge) : ""
+  );
+  const [government, setGovernment] = useState(
+    application.quote?.governmentFee ? String(application.quote.governmentFee) : ""
   );
 
-  const amount = Number(total) || 0;
-  const advance = Math.round((amount * siteConfig.advancePercent) / 100);
-  const balance = Math.max(amount - advance, 0);
+  const quote = computeQuote(Number(service) || 0, Number(government) || 0);
 
   return (
     <Card>
@@ -114,30 +116,10 @@ export function QuoteForm({ application }: { application: PlainApplication }) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
-              label="Total price (INR)"
-              htmlFor="totalAmount"
-              required
-              help="Your full charge for this job, including any government fee."
-            >
-              <Input
-                id="totalAmount"
-                name="totalAmount"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1}
-                value={total}
-                onChange={(event) => setTotal(event.target.value)}
-                placeholder="e.g. 1500"
-                required
-              />
-            </Field>
-
-            <Field
-              label="Of which government fee"
+              label="Government fee (INR)"
               htmlFor="governmentFee"
-              hint="Optional"
-              help="Shown to the client as charged at actuals."
+              hint="Leave 0 if none"
+              help="What the department charges. Payable by the client in full up front, because we have to hand it over to file."
             >
               <Input
                 id="governmentFee"
@@ -146,30 +128,79 @@ export function QuoteForm({ application }: { application: PlainApplication }) {
                 inputMode="numeric"
                 min={0}
                 step={1}
-                defaultValue={application.quote?.governmentFee || ""}
-                placeholder="0"
+                value={government}
+                onChange={(event) => setGovernment(event.target.value)}
+                placeholder="e.g. 100"
+              />
+            </Field>
+
+            <Field
+              label="Our service charge (INR)"
+              htmlFor="serviceCharge"
+              required
+              help={`Only this part splits ${siteConfig.advancePercent}/${siteConfig.balancePercent}.`}
+            >
+              <Input
+                id="serviceCharge"
+                name="serviceCharge"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                value={service}
+                onChange={(event) => setService(event.target.value)}
+                placeholder="e.g. 50"
+                required
               />
             </Field>
           </div>
 
-          {amount > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-brand-200 bg-brand-50 p-3.5">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-brand-700">
-                  Booking ({siteConfig.advancePercent}%)
-                </p>
-                <p className="mt-1 font-display text-[20px] font-extrabold text-navy-900">
-                  {formatINR(advance)}
-                </p>
+          {quote.serviceCharge > 0 ? (
+            <div className="rounded-xl border border-line bg-canvas p-4">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-muted">
+                What the client pays
+              </p>
+
+              <dl className="mt-3 space-y-2 text-[13.5px]">
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted">Government fee (in full, now)</dt>
+                  <dd className="font-semibold text-navy-900">
+                    {formatINR(quote.governmentFee)}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted">
+                    {siteConfig.advancePercent}% of our{" "}
+                    {formatINR(quote.serviceCharge)} charge
+                  </dt>
+                  <dd className="font-semibold text-navy-900">
+                    {formatINR(quote.serviceAdvance)}
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3">
+                <div className="rounded-xl border border-brand-200 bg-brand-50 p-3.5">
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-brand-700">
+                    To start
+                  </p>
+                  <p className="mt-1 font-display text-[20px] font-extrabold text-navy-900">
+                    {formatINR(quote.advance)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-line bg-white p-3.5">
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">
+                    Balance after
+                  </p>
+                  <p className="mt-1 font-display text-[20px] font-extrabold text-navy-900">
+                    {formatINR(quote.balance)}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-xl border border-line bg-canvas p-3.5">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">
-                  Balance ({siteConfig.balancePercent}%)
-                </p>
-                <p className="mt-1 font-display text-[20px] font-extrabold text-navy-900">
-                  {formatINR(balance)}
-                </p>
-              </div>
+
+              <p className="mt-3 text-[12.5px] text-muted">
+                Total for the job: {formatINR(quote.total)}
+              </p>
             </div>
           ) : null}
 
@@ -183,14 +214,14 @@ export function QuoteForm({ application }: { application: PlainApplication }) {
               id="notes"
               name="notes"
               defaultValue={application.quote?.notes ?? ""}
-              placeholder="e.g. Includes notary and stamp paper. Government fee of 50 is charged at actuals."
+              placeholder="e.g. Includes notary and stamp paper."
               className="min-h-20"
             />
           </Field>
 
           <Submit>
             <Send className="h-4 w-4" aria-hidden />
-            {application.quote?.totalAmount ? "Update price" : "Save price"}
+            {application.quote?.serviceCharge ? "Update price" : "Save price"}
           </Submit>
         </form>
         <Result state={state} />
@@ -494,7 +525,7 @@ export function DocumentPanel({
     <Card>
       <CardHeader
         title="Finished document"
-        subtitle="Upload it, the client sees a watermarked preview. Release it only after the balance is in."
+        subtitle="Upload it and it stays locked. Release it only after the balance is in."
       />
       <CardBody className="space-y-5">
         {deliverable?.fileId ? (
@@ -507,9 +538,7 @@ export function DocumentPanel({
                 <p className="mt-0.5 text-[12.5px] text-muted">
                   {((deliverable.size ?? 0) / 1024 / 1024).toFixed(2)} MB ·
                   uploaded {formatDateTime(deliverable.uploadedAt)}
-                  {deliverable.previewFileId
-                    ? " · preview generated"
-                    : " · no preview for this file type"}
+
                 </p>
                 {deliverable.released ? (
                   <p className="mt-1 text-[12.5px] font-semibold text-success-700">
@@ -560,7 +589,7 @@ export function DocumentPanel({
               >
                 {balancePaid
                   ? "The client has paid in full. Release the document to unlock their download."
-                  : "The client can see the watermarked preview but cannot download the original until you release it."}
+                  : "The document is held. The client cannot download it until you release it."}
               </Alert>
 
               <form action={releaseAction} className="mt-3 space-y-3">
@@ -591,7 +620,7 @@ export function DocumentPanel({
           <Field
             label={deliverable?.fileId ? "Replace the document" : "Upload the finished document"}
             htmlFor="file"
-            help="PDF or a photo, up to 4 MB. A watermarked preview is generated automatically, and a new upload always starts locked."
+            help="PDF or a photo, up to 4 MB. A new upload always starts locked, whatever the previous state was."
           >
             <input
               id="file"

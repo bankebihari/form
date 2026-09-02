@@ -52,8 +52,9 @@ Caste, income and domicile certificates, EWS, birth, death and marriage
 registration, PAN, passport, Aadhaar, voter ID, ration card, affidavits and
 notary, Gumasta, Udyam and GST.
 
-Pay only 10% to begin. You see your finished document before the remaining 90%
-is due. Track every stage online with the Tracking ID we send you.
+You pay the government fee at actuals, never marked up, plus only 10% of our
+service charge to begin. The rest of our charge is due once your document is
+ready. Track every stage online with the Tracking ID we send you.
 
 Mon-Sat, 9 AM to 8 PM. We are a private assistance service, not a government
 office.
@@ -68,7 +69,7 @@ footer.
 ## About / status line (max 139 characters)
 
 ```
-Documents done for you. 10% to start, see it before you pay the rest. Mon-Sat 9-8.
+Documents done for you. Govt fee + only 10% of our charge to start. Mon-Sat 9-8.
 ```
 
 ---
@@ -123,10 +124,10 @@ replies**. These are the six messages you will send most often.
 | Shortcut | Message |
 | --- | --- |
 | `/papers` | To start, please send clear photos of: Aadhaar card, ration card or family ID, proof of address, and one passport size photo. Phone photos are fine. |
-| `/price` | Your total is Rs ____. To begin, only 10% is payable now: Rs ____. The remaining Rs ____ is due only after your document is ready and you have seen it. |
+| `/price` | Government fee Rs ____ plus our service charge Rs ____. To begin, please pay Rs ____ - that is the government fee in full plus 10% of our charge. The remaining Rs ____ is due once your document is ready. |
 | `/pay` | You can pay by UPI, bank transfer or cash at our office. I will share the details now. We never ask for your card number, CVV, UPI PIN or OTP. |
 | `/track` | Your Tracking ID is ____. Check the status any time here: https://docseva-in.netlify.app/track - enter that ID or this mobile number. |
-| `/ready` | Good news, your document is ready. Open your tracking page to see it. Please check the name, spelling and dates. If anything is wrong tell me and we will correct it before you pay anything more. |
+| `/ready` | Good news, your document is ready. The balance of Rs ____ is now due. As soon as we confirm it, the file unlocks on your tracking page for download. |
 | `/done` | Payment received, thank you. Your original document is now unlocked on your tracking page. It stays there for 90 days, so please save a copy. |
 
 The `/track` and `/ready` messages are also generated automatically inside the

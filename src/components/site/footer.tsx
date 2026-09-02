@@ -9,11 +9,18 @@ import {
 } from "lucide-react";
 import { LogoMark } from "@/components/site/logo";
 import {
+  FacebookIcon,
+  InstagramIcon,
+  WhatsappIcon,
+  YoutubeIcon,
+} from "@/components/site/social-icons";
+import {
   callLink,
   fullAddress,
   siteConfig,
   whatsappLink,
 } from "@/config/site";
+import { getSocialLinks } from "@/lib/settings";
 
 const serviceLinks = [
   { href: "/services/caste-certificate", label: "Caste Certificate" },
@@ -39,8 +46,39 @@ const legalLinks = [
   { href: "/refund-policy", label: "Refund & payment policy" },
 ];
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
+  const social = await getSocialLinks();
+
+  /* On a phone these open the apps themselves: Instagram, Facebook, YouTube and
+     WhatsApp all register their own web links, so a plain https URL is what you
+     want. Custom schemes like instagram:// break when the app is not installed. */
+  const socialLinks = [
+    {
+      label: "WhatsApp",
+      href: whatsappLink(`Hello ${siteConfig.name}`),
+      Icon: WhatsappIcon,
+      className: "hover:bg-[#25D366] hover:text-[#062e18]",
+    },
+    {
+      label: "Instagram",
+      href: social.instagram,
+      Icon: InstagramIcon,
+      className: "hover:bg-[#E1306C] hover:text-white",
+    },
+    {
+      label: "Facebook",
+      href: social.facebook,
+      Icon: FacebookIcon,
+      className: "hover:bg-[#1877F2] hover:text-white",
+    },
+    {
+      label: "YouTube",
+      href: social.youtube,
+      Icon: YoutubeIcon,
+      className: "hover:bg-[#FF0000] hover:text-white",
+    },
+  ].filter((item) => Boolean(item.href));
 
   return (
     <footer className="bg-navy-900 text-navy-200 no-print">
@@ -56,6 +94,25 @@ export function Footer() {
             <p className="mt-4 text-[14px] leading-relaxed">
               {siteConfig.description}
             </p>
+            {socialLinks.length ? (
+              <ul className="mt-5 flex flex-wrap gap-2">
+                {socialLinks.map(({ label, href, Icon, className }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      title={label}
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl border border-navy-700 bg-navy-800 text-navy-200 transition-colors ${className}`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
             <div className="mt-5 flex items-start gap-2 rounded-xl bg-navy-800 p-3 text-[13px]">
               <ShieldCheck
                 className="mt-0.5 h-4 w-4 shrink-0 text-success-500"

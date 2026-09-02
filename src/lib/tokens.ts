@@ -13,7 +13,7 @@ function secret() {
 /* -------------------------------------------------------------------------
    Client tracking tokens
    Issued after a successful Tracking ID + phone lookup. They let the browser
-   fetch the preview and (once released) the original file without ever putting
+   fetch their document once it is released, without ever putting
    the phone number in a URL.
    ------------------------------------------------------------------------- */
 

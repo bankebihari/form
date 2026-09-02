@@ -1,13 +1,16 @@
 import { FileCode2, Phone, ShieldCheck } from "lucide-react";
 import { PasswordForm } from "@/components/admin/password-form";
+import { SocialLinksForm } from "@/components/admin/social-links-form";
 import { Card, CardBody, CardHeader } from "@/components/ui/primitives";
 import { fullAddress, siteConfig } from "@/config/site";
 import { requireAdmin } from "@/lib/auth";
+import { getSocialLinks } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
   const session = await requireAdmin();
+  const social = await getSocialLinks();
 
   return (
     <div className="space-y-5">
@@ -21,7 +24,10 @@ export default async function AdminSettingsPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <PasswordForm />
+        <div className="space-y-5">
+          <SocialLinksForm links={social} />
+          <PasswordForm />
+        </div>
 
         <div className="space-y-5">
           <Card>

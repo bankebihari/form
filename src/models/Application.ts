@@ -51,7 +51,6 @@ const PaymentsSchema = new Schema(
 const DeliverableSchema = new Schema(
   {
     fileId: { type: Schema.Types.ObjectId, default: undefined },
-    previewFileId: { type: Schema.Types.ObjectId, default: undefined },
     filename: { type: String, default: "" },
     contentType: { type: String, default: "" },
     size: { type: Number, default: 0 },
@@ -124,8 +123,12 @@ const ApplicationSchema = new Schema(
     status: { type: String, enum: ALL_STATUSES, default: "SUBMITTED", index: true },
 
     quote: {
-      totalAmount: { type: Number, default: 0 },
+      /** What we charge for the work. The 10/90 split applies to this only. */
+      serviceCharge: { type: Number, default: 0 },
+      /** What the department charges. Payable in full up front, never split. */
       governmentFee: { type: Number, default: 0 },
+      /** serviceCharge + governmentFee, stored so reports do not recompute it. */
+      totalAmount: { type: Number, default: 0 },
       notes: { type: String, default: "" },
       quotedAt: { type: Date, default: undefined },
     },

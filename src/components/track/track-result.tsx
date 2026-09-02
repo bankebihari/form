@@ -5,7 +5,6 @@ import {
   Circle,
   Clock,
   Download,
-  Eye,
   FileText,
   Lock,
   MessageCircle,
@@ -54,8 +53,7 @@ export function TrackResult({
   const currentStep = statusStepIndex(view.status);
   const stopped = view.status === "ON_HOLD" || view.status === "CANCELLED";
 
-  const previewUrl = `/api/track/file?kind=preview&token=${encodeURIComponent(token)}`;
-  const downloadUrl = `/api/track/file?kind=original&token=${encodeURIComponent(token)}`;
+  const downloadUrl = `/api/track/file?token=${encodeURIComponent(token)}`;
 
   const advance = view.payments.advance;
   const balance = view.payments.balance;
@@ -213,17 +211,37 @@ export function TrackResult({
       <Card>
         <CardHeader
           title="Payment"
-          subtitle={`${siteConfig.advancePercent}% to start, ${siteConfig.balancePercent}% after you have seen the document`}
+          subtitle={`The government fee in full, plus ${siteConfig.advancePercent}% of our service charge, to start`}
         />
         <CardBody className="space-y-4">
           {view.quote.totalAmount > 0 ? (
-            <div className="flex items-center justify-between rounded-xl border border-line bg-canvas px-4 py-3">
-              <span className="text-[13.5px] font-medium text-muted">
-                Total agreed price
-              </span>
-              <span className="font-display text-[20px] font-extrabold text-navy-900">
-                {formatINR(view.quote.totalAmount)}
-              </span>
+            /* The split is the thing people query, so the arithmetic is shown
+               rather than just the two totals. */
+            <div className="rounded-xl border border-line bg-canvas p-4">
+              <dl className="space-y-2 text-[13.5px]">
+                {view.quote.governmentFee > 0 ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted">
+                      Government fee (at actuals, never marked up)
+                    </dt>
+                    <dd className="font-semibold text-navy-900">
+                      {formatINR(view.quote.governmentFee)}
+                    </dd>
+                  </div>
+                ) : null}
+                <div className="flex justify-between gap-3">
+                  <dt className="text-muted">Our service charge</dt>
+                  <dd className="font-semibold text-navy-900">
+                    {formatINR(view.quote.serviceCharge)}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 border-t border-line pt-2">
+                  <dt className="font-semibold text-navy-900">Total</dt>
+                  <dd className="font-display text-[20px] font-extrabold text-navy-900">
+                    {formatINR(view.quote.totalAmount)}
+                  </dd>
+                </div>
+              </dl>
             </div>
           ) : (
             <Alert tone="info">
@@ -234,16 +252,21 @@ export function TrackResult({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <PaymentTile
-              label={`Booking (${siteConfig.advancePercent}%)`}
+              label="To start"
               amount={advance.amount}
               status={advance.status}
               receivedAt={advance.receivedAt}
               reference={advance.reference}
-              payHref={payMessage("booking amount", advance.amount)}
+              payHref={payMessage("amount to start", advance.amount)}
               disabled={view.quote.totalAmount === 0}
+              note={
+                view.quote.governmentFee > 0
+                  ? `${formatINR(view.quote.governmentFee)} government fee + ${siteConfig.advancePercent}% of our charge`
+                  : `${siteConfig.advancePercent}% of our service charge`
+              }
             />
             <PaymentTile
-              label={`Balance (${siteConfig.balancePercent}%)`}
+              label="Balance"
               amount={balance.amount}
               status={balance.status}
               receivedAt={balance.receivedAt}
@@ -252,20 +275,14 @@ export function TrackResult({
               disabled={
                 view.quote.totalAmount === 0 || advance.status === "PENDING"
               }
+              note={`The remaining ${siteConfig.balancePercent}% of our service charge`}
               lockedNote={
                 advance.status === "PENDING"
-                  ? "Due after the booking amount"
+                  ? "Due once the first payment is recorded"
                   : undefined
               }
             />
           </div>
-
-          {view.quote.governmentFee > 0 ? (
-            <p className="text-[13px] text-muted">
-              Government fee of {formatINR(view.quote.governmentFee)} is included
-              in the total above and is charged at actuals.
-            </p>
-          ) : null}
 
           {view.quote.notes ? (
             <p className="rounded-xl border border-line bg-canvas p-3.5 text-[13.5px] leading-relaxed text-navy-700">
@@ -321,8 +338,8 @@ export function TrackResult({
                 Your document is not ready yet
               </p>
               <p className="mx-auto mt-1 max-w-sm text-[13.5px] leading-relaxed text-muted">
-                As soon as it is prepared, a preview appears right here and we
-                message you on WhatsApp.
+                We will message you on WhatsApp the moment it is prepared, and
+                it will appear here.
               </p>
             </div>
           ) : view.document.released ? (
@@ -347,75 +364,19 @@ export function TrackResult({
                   <span className="truncate">{view.document.filename}</span>
                 </p>
               ) : null}
-              {view.document.hasPreview ? (
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand-700 hover:text-brand-800"
-                >
-                  <Eye className="h-4 w-4" aria-hidden />
-                  View the preview copy
-                </a>
-              ) : null}
             </div>
           ) : (
             <div className="space-y-4">
-              <Alert tone="warn" title="Check your document before paying">
-                This is a watermarked preview. Read every detail — name,
-                spelling, dates. If something is wrong, tell us and we will fix
-                it before you pay a rupee more.
-              </Alert>
-
-              {view.document.hasPreview ? (
-                <>
-                  <div className="overflow-hidden rounded-xl border border-line bg-navy-50">
-                    <object
-                      data={previewUrl}
-                      type="application/pdf"
-                      className="h-[420px] w-full sm:h-[560px]"
-                      aria-label="Watermarked document preview"
-                    >
-                      <div className="p-6 text-center">
-                        <p className="text-[14px] text-navy-800">
-                          Your browser cannot show the preview inline.
-                        </p>
-                        <AnchorButton
-                          href={previewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          variant="outline"
-                          className="mt-3"
-                        >
-                          <Eye className="h-4 w-4" aria-hidden />
-                          Open preview
-                        </AnchorButton>
-                      </div>
-                    </object>
-                  </div>
-                  <AnchorButton
-                    href={previewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="outline"
-                    className="w-full sm:hidden"
-                  >
-                    <Eye className="h-4 w-4" aria-hidden />
-                    Open preview full screen
-                  </AnchorButton>
-                </>
-              ) : (
-                <div className="rounded-xl border border-line bg-canvas p-6 text-center">
-                  <Lock className="mx-auto h-7 w-7 text-navy-400" aria-hidden />
-                  <p className="mt-2.5 text-[14px] font-semibold text-navy-900">
-                    Your document is ready and held securely
-                  </p>
-                  <p className="mx-auto mt-1 max-w-sm text-[13.5px] text-muted">
-                    A preview could not be generated for this file type. Message
-                    us and we will show it to you on WhatsApp.
-                  </p>
-                </div>
-              )}
+              <div className="rounded-xl border border-line bg-canvas p-6 text-center">
+                <Lock className="mx-auto h-7 w-7 text-navy-400" aria-hidden />
+                <p className="mt-2.5 text-[15px] font-semibold text-navy-900">
+                  Your document is ready and held securely
+                </p>
+                <p className="mx-auto mt-1 max-w-sm text-[13.5px] leading-relaxed text-muted">
+                  It downloads from this page as soon as our team confirms your
+                  balance payment.
+                </p>
+              </div>
 
               <div className="rounded-xl border border-navy-800 bg-navy-900 p-4 text-white">
                 <p className="flex items-start gap-2.5 text-[13.5px] leading-relaxed">
@@ -535,6 +496,7 @@ function PaymentTile({
   payHref,
   disabled,
   lockedNote,
+  note,
 }: {
   label: string;
   amount: number;
@@ -544,6 +506,7 @@ function PaymentTile({
   payHref: string;
   disabled?: boolean;
   lockedNote?: string;
+  note?: string;
 }) {
   const received = status === "RECEIVED" || status === "WAIVED";
 
@@ -568,6 +531,10 @@ function PaymentTile({
       <p className="mt-2 font-display text-[22px] font-extrabold text-navy-900">
         {amount > 0 ? formatINR(amount) : "—"}
       </p>
+
+      {note && !received ? (
+        <p className="mt-1 text-[12px] leading-snug text-muted">{note}</p>
+      ) : null}
 
       {received ? (
         <p className="mt-1 text-[12.5px] text-success-700">

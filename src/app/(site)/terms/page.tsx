@@ -6,7 +6,7 @@ import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: `The terms on which ${siteConfig.legalName} provides document assistance: pricing, the 10/90 payment structure, timelines, responsibilities and limits.`,
+  description: `The terms on which ${siteConfig.legalName} provides document assistance: how the government fee and our service charge work, the 10/90 split on our charge, timelines, responsibilities and limits.`,
   alternates: { canonical: absoluteUrl("/terms") },
 };
 
@@ -46,9 +46,14 @@ export default function TermsPage() {
           <h2>3. Pricing</h2>
           <ul>
             <li>
-              Prices shown on this website are <strong>starting</strong> service
-              charges. Your final price depends on your state, application
-              category and the papers you already hold.
+              A job has two separate amounts: the{" "}
+              <strong>government fee</strong>, which the department charges and
+              which we pass on at actuals without any mark-up, and our{" "}
+              <strong>service charge</strong> for doing the work.
+            </li>
+            <li>
+              No prices are published on this website. Your price depends on your
+              state, application category and the papers you already hold.
             </li>
             <li>
               The final price is confirmed with you on a call or on WhatsApp{" "}
@@ -56,21 +61,30 @@ export default function TermsPage() {
               price does not change afterwards.
             </li>
             <li>
-              Government fees, stamp duty and notary charges, where applicable,
-              are separate and are charged at actuals.
+              Stamp duty and notary charges, where applicable, are likewise
+              charged at actuals.
             </li>
           </ul>
 
           <h2>4. Payment structure</h2>
           <ul>
             <li>
-              <strong>{siteConfig.advancePercent}% booking amount</strong> is
-              payable after the price is agreed. Work begins once we record it.
+              <strong>To start:</strong> the government fee in full, plus{" "}
+              {siteConfig.advancePercent}% of our service charge. The government
+              fee must reach the department before your application can be
+              filed, which is why that part is not split. Work begins once we
+              record the payment.
             </li>
             <li>
-              <strong>{siteConfig.balancePercent}% balance</strong> is payable
-              only after the finished document has been uploaded to your
-              tracking page and you have viewed the preview.
+              <strong>Balance:</strong> the remaining{" "}
+              {siteConfig.balancePercent}% of our service charge, payable only
+              after the finished document has been uploaded to your tracking page
+              and marked as ready.
+            </li>
+            <li>
+              The {siteConfig.advancePercent}/{siteConfig.balancePercent} split
+              applies to <strong>our service charge alone</strong>. We never take
+              a percentage of a government fee.
             </li>
             <li>
               The original document is released for download once our team
@@ -109,8 +123,8 @@ export default function TermsPage() {
               verification.
             </li>
             <li>
-              Check the preview carefully and tell us about any error before
-              paying the balance.
+              Check the finished document as soon as you receive it and tell us
+              about any error straight away.
             </li>
           </ul>
 

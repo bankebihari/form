@@ -27,10 +27,10 @@ export type ServiceSeed = {
 export const COMMON_STEPS = [
   "Raise your request online or send us a message on WhatsApp",
   "Our executive calls you, verifies your papers and confirms the final price",
-  "Pay 10% booking amount — we start the same day",
+  "Pay the government fee plus 10% of our charge - we start the same day",
   "We prepare, submit and follow up with the department",
-  "You see a preview of the finished document on your tracking page",
-  "Clear the remaining 90% and download the original instantly",
+  "Your tracking page shows every stage as it happens",
+  "Clear the balance of our charge and download the document instantly",
 ];
 
 export const SERVICE_CATALOGUE: ServiceSeed[] = [

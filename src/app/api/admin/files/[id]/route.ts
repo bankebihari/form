@@ -13,7 +13,7 @@ import { cleanFilename } from "@/lib/sanitize";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Staff-only access to any stored file: client uploads, deliverables, previews. */
+/** Staff-only access to any stored file: client uploads and finished documents. */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

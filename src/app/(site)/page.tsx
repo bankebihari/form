@@ -3,15 +3,11 @@ import Link from "next/link";
 import {
   ArrowRight,
   CheckCircle2,
-  Eye,
-  FileCheck2,
+  Landmark,
   Lock,
   MessageCircle,
   Phone,
-  PlayCircle,
   ShieldCheck,
-  Sparkles,
-  Unlock,
 } from "lucide-react";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FaqList } from "@/components/site/faq";
@@ -43,7 +39,7 @@ export const metadata: Metadata = {
     absolute: `${siteConfig.name} — Apply for Government Documents Online, Pay Only 10% to Start`,
   },
   description:
-    "Caste, income, domicile, birth, PAN and more. Raise a request in 2 minutes, track it live, see your document before you pay the balance. Talk to a real person on WhatsApp or phone.",
+    "Caste, income, domicile, birth, PAN and more, filed and followed up for you. Pay the government fee plus a tenth of our charge to begin. Raise a request in 2 minutes and talk to a real person on WhatsApp or phone.",
   alternates: { canonical: absoluteUrl("/") },
   openGraph: {
     type: "website",
@@ -56,8 +52,8 @@ export const metadata: Metadata = {
 
 const heroChips = [
   "No account needed",
-  "Only 10% to start",
-  "See the document before you pay",
+  "Only 10% of our fee to start",
+  "Government fee never marked up",
 ];
 
 export default async function HomePage() {
@@ -99,10 +95,10 @@ export default async function HomePage() {
               </h1>
 
               <p className="mt-5 max-w-xl text-[15.5px] leading-relaxed text-muted sm:text-[17px]">
-                Caste, income, domicile, birth, PAN, affidavits and more. Raise
-                your request in two minutes, track every stage on your phone,
-                and pay the balance only after you have seen the finished
-                document.
+                Caste, income, domicile, birth, PAN, affidavits and more. We
+                fill the forms, file them and follow up, so you never queue at a
+                government office. Raise a request in two minutes and track
+                every stage from your phone.
               </p>
 
               <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5">
@@ -167,30 +163,31 @@ export default async function HomePage() {
 
                 <ol className="mt-5 space-y-3">
                   <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-600 font-display text-[15px] font-extrabold text-white">
-                      10%
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-800 text-white">
+                      <Landmark className="h-5 w-5" aria-hidden />
                     </span>
                     <span>
                       <span className="block text-[15px] font-bold text-navy-900">
-                        Booking amount
+                        Government fee, in full
                       </span>
                       <span className="mt-0.5 block text-[13px] leading-relaxed text-muted">
-                        Paid over call or WhatsApp. We start work the same day.
+                        This goes straight to the department, not to us. We have
+                        to pay it before anything can be filed, so it is never
+                        split and never marked up.
                       </span>
                     </span>
                   </li>
 
                   <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-100 text-navy-700">
-                      <Eye className="h-5 w-5" aria-hidden />
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-600 font-display text-[15px] font-extrabold text-white">
+                      10%
                     </span>
                     <span>
                       <span className="block text-[15px] font-bold text-navy-900">
-                        Preview, locked
+                        A tenth of our own charge
                       </span>
                       <span className="mt-0.5 block text-[13px] leading-relaxed text-muted">
-                        Your finished document appears on your tracking page as
-                        a watermarked preview. Check it carefully.
+                        That is all we ask to begin. Work starts the same day.
                       </span>
                     </span>
                   </li>
@@ -201,15 +198,48 @@ export default async function HomePage() {
                     </span>
                     <span>
                       <span className="block text-[15px] font-bold text-navy-900">
-                        Balance, then download
+                        The rest, at the end
                       </span>
                       <span className="mt-0.5 block text-[13px] leading-relaxed text-muted">
-                        Once the balance is confirmed, the original file unlocks
-                        instantly for download.
+                        Payable once your document is ready. It unlocks for
+                        download the moment we confirm it.
                       </span>
                     </span>
                   </li>
                 </ol>
+
+                {/* The arithmetic, spelled out. This is the bit people ask about. */}
+                <div className="mt-4 rounded-xl border border-navy-200 bg-navy-50 p-4">
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-navy-700">
+                    For example, a PAN card
+                  </p>
+                  <dl className="mt-2.5 space-y-1.5 text-[13px]">
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted">Government fee</dt>
+                      <dd className="font-semibold text-navy-900">&#8377;100</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted">Our service charge</dt>
+                      <dd className="font-semibold text-navy-900">&#8377;50</dd>
+                    </div>
+                    <div className="flex justify-between gap-3 border-t border-navy-200 pt-1.5">
+                      <dt className="font-semibold text-navy-900">
+                        You pay to start
+                      </dt>
+                      <dd className="font-bold text-brand-700">
+                        &#8377;105
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted">Then, when it is ready</dt>
+                      <dd className="font-semibold text-navy-900">&#8377;45</dd>
+                    </div>
+                  </dl>
+                  <p className="mt-2.5 text-[12px] leading-relaxed text-muted">
+                    &#8377;105 is the &#8377;100 government fee in full, plus
+                    &#8377;5 &mdash; a tenth of our &#8377;50.
+                  </p>
+                </div>
 
                 <p className="mt-5 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-3.5 text-[12.5px] leading-relaxed text-navy-700">
                   <Lock
@@ -280,88 +310,6 @@ export default async function HomePage() {
         </ol>
       </Section>
 
-      {/* ---------------------------------------------------- Preview / release */}
-      <Section tone="white">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <SectionHeading
-              align="left"
-              eyebrow="The part that protects you"
-              title="You see the document before you pay the balance"
-              subtitle="This is the single biggest worry people have with document agents: paying up front and then chasing someone for weeks. We removed it."
-            />
-            <ul className="space-y-4">
-              {[
-                {
-                  icon: FileCheck2,
-                  title: "We finish the work first",
-                  body: "The full document is prepared and uploaded to your private tracking page.",
-                },
-                {
-                  icon: Eye,
-                  title: "You review a watermarked preview",
-                  body: "Names, dates, spellings — check everything. Wrong detail? We correct it before any balance is due.",
-                },
-                {
-                  icon: Unlock,
-                  title: "Balance cleared, file unlocked",
-                  body: "The moment our team confirms your payment, the original downloads with one tap.",
-                },
-              ].map((item) => (
-                <li key={item.title} className="flex gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                    <item.icon className="h-5 w-5" strokeWidth={1.9} aria-hidden />
-                  </span>
-                  <span>
-                    <span className="block text-[15.5px] font-bold text-navy-900">
-                      {item.title}
-                    </span>
-                    <span className="mt-1 block text-[14px] leading-relaxed text-muted">
-                      {item.body}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Locked-document mock */}
-          <div className="relative mx-auto w-full max-w-sm">
-            <div className="rounded-2xl border border-line bg-white p-4 shadow-lift">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <span className="text-[12.5px] font-bold text-navy-900">
-                  OCC-2609-K7Q3XM
-                </span>
-                <Badge tone="warn">Awaiting balance</Badge>
-              </div>
-              <div className="relative mt-4 overflow-hidden rounded-xl border border-line bg-navy-50">
-                <div className="space-y-2.5 p-5 blur-[2px]">
-                  <div className="h-3 w-2/3 rounded bg-navy-200" />
-                  <div className="h-2.5 w-full rounded bg-navy-100" />
-                  <div className="h-2.5 w-5/6 rounded bg-navy-100" />
-                  <div className="h-2.5 w-full rounded bg-navy-100" />
-                  <div className="h-2.5 w-3/4 rounded bg-navy-100" />
-                  <div className="mt-4 h-16 rounded bg-navy-100" />
-                  <div className="h-2.5 w-1/2 rounded bg-navy-100" />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="-rotate-12 select-none font-display text-[26px] font-extrabold tracking-[0.2em] text-navy-900/15">
-                    PREVIEW
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-3 rounded-xl bg-navy-900 p-3.5 text-white">
-                <Lock className="h-5 w-5 text-gold-500" aria-hidden />
-                <span className="text-[12.5px] leading-snug">
-                  Original download unlocks after the balance is confirmed by
-                  our team.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
-
       {/* --------------------------------------------------------- Why trust us */}
       <Section>
         <SectionHeading
@@ -387,49 +335,6 @@ export default async function HomePage() {
               </p>
             </div>
           ))}
-        </div>
-      </Section>
-
-      {/* ----------------------------------------------------------- Video / YT */}
-      <Section tone="white">
-        <div className="grid items-center gap-8 rounded-[18px] border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-6 shadow-soft sm:p-10 lg:grid-cols-2">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[12.5px] font-semibold text-navy-800">
-              <Sparkles className="h-3.5 w-3.5 text-gold-600" aria-hidden />
-              Watch before you decide
-            </span>
-            <h2 className="mt-4 font-display text-[26px] font-extrabold leading-tight text-navy-900 sm:text-[32px]">
-              See a real application, start to finish
-            </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-muted">
-              We record the whole process on YouTube — the form, the call, the
-              10% booking, the preview and the final download. Watch it once and
-              you will know exactly what to expect.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <AnchorButton
-                href={siteConfig.social.youtube}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="lg"
-              >
-                <PlayCircle className="h-5 w-5" aria-hidden />
-                Watch on YouTube
-              </AnchorButton>
-              <LinkButton href="/book-a-demo" variant="outline" size="lg">
-                Book a free demo call
-              </LinkButton>
-            </div>
-          </div>
-          <div className="relative aspect-video overflow-hidden rounded-xl border border-navy-800 bg-navy-950 shadow-lift">
-            <div className="bg-grid absolute inset-0 opacity-50" aria-hidden />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <PlayCircle className="h-14 w-14 text-white/90" aria-hidden />
-              <p className="text-[13px] font-semibold text-navy-200">
-                Full walkthrough &middot; 6 min
-              </p>
-            </div>
-          </div>
         </div>
       </Section>
 

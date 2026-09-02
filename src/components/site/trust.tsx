@@ -12,13 +12,13 @@ import { cn } from "@/lib/utils";
 const badges = [
   {
     icon: BadgeIndianRupee,
-    title: "Pay only 10% to start",
-    body: "The remaining 90% is due only after you have seen your finished document.",
+    title: "Only 10% of our fee to start",
+    body: "The government fee is paid in full because it goes to the department. Our own charge splits 10 now, 90 at the end.",
   },
   {
     icon: Eye,
-    title: "See before you pay",
-    body: "A watermarked preview is posted to your tracking page the moment work is done.",
+    title: "Nothing hidden in the price",
+    body: "The government fee is shown separately at actuals and never marked up. One number, agreed before you pay anything.",
   },
   {
     icon: Lock,

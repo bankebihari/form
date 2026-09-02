@@ -10,7 +10,7 @@ import { absoluteUrl, breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "About Us — A Local Document Team You Can Actually Reach",
-  description: `${siteConfig.legalName} helps families and small businesses get government documents without losing a day of work. Real people, one clear price, and payment only after you see the result.`,
+  description: `${siteConfig.legalName} helps families and small businesses get government documents without losing a day of work. Real people, one clear price, and only 10% of our fee to begin.`,
   alternates: { canonical: absoluteUrl("/about") },
 };
 
@@ -21,7 +21,7 @@ const principles = [
   },
   {
     title: "We do not hold documents hostage",
-    body: "You see your finished document before paying the balance, and the original is released the moment the payment is confirmed. No delays, no bargaining at the end.",
+    body: "The moment your balance is confirmed the document is released. No delays, no bargaining at the end, no extra charge that appears only once the work is done.",
   },
   {
     title: "We say no when we cannot help",
@@ -70,13 +70,14 @@ export default function AboutPage() {
             </p>
             <ul>
               <li>
-                <strong>You pay 10% to start.</strong> Not half, not full. The
-                risk you take at the beginning is deliberately small.
+                <strong>Only 10% of our fee to start.</strong> Not half, not
+                full, and never a percentage of the government fee. The risk you
+                take at the beginning is deliberately small.
               </li>
               <li>
-                <strong>You see the document before the balance is due.</strong>{" "}
-                A watermarked preview is posted to your tracking page as soon as
-                the work is finished.
+                <strong>The government fee is never marked up.</strong> You pay
+                the department exactly what they charge, shown separately from
+                our own fee, with the receipt.
               </li>
               <li>
                 <strong>Every stage is on record.</strong> Your tracking page

@@ -53,7 +53,7 @@ export default async function AdminDashboardPage() {
     {
       label: "Waiting for balance",
       value: stats.awaitingBalance,
-      hint: "Preview sent, 90% pending",
+      hint: "Document ready, balance pending",
       icon: Wallet,
       href: "/admin/applications?status=READY_PREVIEW",
       tone: "bg-gold-100 text-gold-600",

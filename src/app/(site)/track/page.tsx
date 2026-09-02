@@ -7,9 +7,9 @@ import { siteConfig } from "@/config/site";
 import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Track Your Application — Live Status, Preview and Download",
+  title: "Track Your Application — Live Status and Download",
   description:
-    "Enter your Tracking ID or the mobile number you gave us to see exactly where your document is, view the preview once it is ready, and download the original after the balance is cleared.",
+    "Enter your Tracking ID or the mobile number you gave us to see exactly where your document is, what is still to pay, and download it once the balance is cleared.",
   alternates: { canonical: absoluteUrl("/track") },
 };
 
@@ -21,8 +21,8 @@ const points = [
   },
   {
     icon: Eye,
-    title: "Preview first",
-    body: "When your document is ready you see a watermarked copy here, before any balance is due.",
+    title: "Every payment on record",
+    body: "What you have paid and what is still due, with the date and reference for each.",
   },
   {
     icon: Lock,

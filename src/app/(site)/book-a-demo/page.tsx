@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 const covered = [
   "How your request moves from raised to delivered",
   "A live look at a real tracking page",
-  "How the watermarked preview works, and why you see it before paying",
+  "How the government fee and our service charge are split, with real numbers",
   "Exactly how the 10% and 90% payments are arranged and recorded",
   "What we need from you for your specific document",
   "An honest answer on timeline and price for your case",
@@ -33,7 +33,7 @@ export default async function BookADemoPage() {
       <PageHero
         eyebrow="Book a demo"
         title="See how it works before you pay anything"
-        subtitle="A free 15-minute walkthrough on a call or WhatsApp video. We show you a real application, the tracking page and the preview-before-payment step."
+        subtitle="A free 15-minute walkthrough on a call or WhatsApp video. We show you a real application, the tracking page and exactly how the payment splits."
         crumbs={[{ name: "Book a demo", path: "/book-a-demo" }]}
       />
 
@@ -47,7 +47,7 @@ export default async function BookADemoPage() {
               services={services}
               withSchedule
               messageLabel="Anything specific you want to see?"
-              messagePlaceholder="e.g. Show me how the preview looks for an income certificate."
+              messagePlaceholder="e.g. Show me what an income certificate costs end to end."
               submitLabel="Book my demo"
               successTitle="Demo booked"
               successBody="We have your slot. Our team will confirm on WhatsApp shortly — you can also message us right now to lock it in."

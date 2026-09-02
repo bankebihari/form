@@ -47,7 +47,7 @@ export async function generateMetadata({
     `${service.title} Online — Apply, Track and Get It Delivered`;
   const description =
     service.seoDescription ||
-    `${service.shortDescription} Get a clear price on one call, pay only 10% to start, and see the document before paying the balance.`;
+    `${service.shortDescription} Get a clear price on one call. Pay the government fee plus 10% of our service charge to begin, and the rest once it is ready.`;
 
   return {
     title,
@@ -107,7 +107,7 @@ export default async function ServiceDetailPage({
           </span>
           <span className="flex items-center gap-2 rounded-xl border border-line bg-white px-3.5 py-2 text-[13.5px] font-semibold text-navy-800 shadow-soft">
             <ShieldCheck className="h-4 w-4 text-success-600" aria-hidden />
-            Only {siteConfig.advancePercent}% to start
+Only {siteConfig.advancePercent}% of our charge to start
           </span>
         </div>
       </PageHero>
@@ -248,8 +248,8 @@ export default async function ServiceDetailPage({
                     className="h-4 w-4 shrink-0 text-success-500"
                     aria-hidden
                   />
-                  Only {siteConfig.advancePercent}% to begin, the rest after you
-                  see the document
+                  Government fee + {siteConfig.advancePercent}% of our charge to
+                  begin
                 </p>
               </div>
 

@@ -39,13 +39,13 @@ export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
   QUOTED: {
     label: "Price confirmed",
     description:
-      "Your price is confirmed. Pay the 10% booking amount over call or WhatsApp and we begin immediately.",
+      "Your price is confirmed. Pay the government fee plus 10% of our service charge over call or WhatsApp, and we begin immediately.",
     tone: "warn",
   },
   ADVANCE_PAID: {
     label: "Booking amount received",
     description:
-      "Thank you. Your 10% booking amount is recorded and your file is now in our work queue.",
+      "Thank you. Your first payment is recorded and your file is now in our work queue.",
     tone: "success",
   },
   IN_PROGRESS: {
@@ -55,15 +55,15 @@ export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
     tone: "info",
   },
   READY_PREVIEW: {
-    label: "Document ready (preview)",
+    label: "Document ready",
     description:
-      "Your document is ready. You can view a watermarked preview here. Clear the remaining 90% to unlock the original download.",
+      "Your document is prepared and held securely. Clear the balance and it unlocks for download on this page.",
     tone: "warn",
   },
   FULL_PAID: {
     label: "Payment complete",
     description:
-      "Full payment recorded. Your original document is being released to your tracking page.",
+      "Full payment recorded. Your document is being released to your tracking page.",
     tone: "success",
   },
   DELIVERED: {

@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { siteConfig } from "@/config/site";
 import { requireAdmin } from "@/lib/auth";
 import {
   ALL_STATUSES,
@@ -15,6 +14,7 @@ import {
   type ApplicationStatus,
 } from "@/lib/constants";
 import { connectDB } from "@/lib/db";
+import { computeQuote } from "@/lib/pricing";
 import { deleteFile, uploadBuffer } from "@/lib/gridfs";
 import {
   cleanAmount,
@@ -26,11 +26,11 @@ import {
   isValidPhone,
   normalisePhone,
 } from "@/lib/sanitize";
-import { buildWatermarkedPreview } from "@/lib/watermark";
 import { Application } from "@/models/Application";
 import { generateTrackingId } from "@/lib/tracking-id";
 import { AdminUser } from "@/models/AdminUser";
 import { Lead } from "@/models/Lead";
+import { SETTINGS_ID, Setting } from "@/models/Setting";
 
 export type ActionState = { ok: boolean; message: string };
 
@@ -107,13 +107,24 @@ export async function createApplicationAction(
             ? value
             : "WHATSAPP") as (typeof LEAD_SOURCES)[number]
         ),
-      totalAmount: z.string().transform((value) => cleanAmount(value)),
+      serviceCharge: z.string().transform((value) => cleanAmount(value)),
+      governmentFee: z.string().transform((value) => cleanAmount(value)),
       note: z.string().transform((value) => cleanText(value, 800)),
       urgent: z
         .string()
         .transform((value) => value === "on" || value === "true"),
     })
-    .safeParse(fields(formData, ["phone","title","name","serviceSlug","source","totalAmount","note","urgent"] as const));
+    .safeParse(fields(formData, [
+        "phone",
+        "title",
+        "name",
+        "serviceSlug",
+        "source",
+        "serviceCharge",
+        "governmentFee",
+        "note",
+        "urgent",
+      ] as const));
 
   if (!parsed.success) {
     return problem(parsed.error.issues[0]?.message ?? "Check the details.");
@@ -157,28 +168,22 @@ export async function createApplicationAction(
   });
 
   // A price given up front saves a second visit to this screen.
-  if (input.totalAmount > 0) {
-    const advance = Math.round(
-      (input.totalAmount * siteConfig.advancePercent) / 100
-    );
+  if (input.serviceCharge > 0) {
+    const quote = computeQuote(input.serviceCharge, input.governmentFee);
     application.quote = {
-      totalAmount: input.totalAmount,
-      governmentFee: 0,
+      serviceCharge: quote.serviceCharge,
+      governmentFee: quote.governmentFee,
+      totalAmount: quote.total,
       notes: "",
       quotedAt: now,
     };
-    application.payments.advance.amount = advance;
-    application.payments.balance.amount = Math.max(
-      input.totalAmount - advance,
-      0
-    );
+    application.payments.advance.amount = quote.advance;
+    application.payments.balance.amount = quote.balance;
     application.status = "QUOTED";
     application.timeline.push({
       status: "QUOTED",
       title: "Price confirmed",
-      note: `Total ${input.totalAmount}. Booking ${advance}, balance ${
-        input.totalAmount - advance
-      }.`,
+      note: `Government fee ${quote.governmentFee} + service charge ${quote.serviceCharge} = ${quote.total}. To start ${quote.advance}, balance ${quote.balance}.`,
       by: session.name,
       at: now,
     });
@@ -201,34 +206,37 @@ export async function setQuoteAction(
   const parsed = z
     .object({
       id: idSchema,
-      totalAmount: z.string().transform((value) => cleanAmount(value)),
+      serviceCharge: z.string().transform((value) => cleanAmount(value)),
       governmentFee: z.string().transform((value) => cleanAmount(value)),
       notes: z.string().transform((value) => cleanText(value, 600)),
     })
-    .safeParse(fields(formData, ["id","totalAmount","governmentFee","notes"] as const));
+    .safeParse(
+      fields(formData, ["id", "serviceCharge", "governmentFee", "notes"] as const)
+    );
 
   if (!parsed.success) return problem("Enter a valid amount.");
-  const { id, totalAmount, governmentFee, notes } = parsed.data;
+  const { id, serviceCharge, governmentFee, notes } = parsed.data;
 
-  if (governmentFee > totalAmount) {
-    return problem("Government fee cannot be more than the total price.");
+  if (serviceCharge <= 0) {
+    return problem("Enter your service charge. It cannot be zero.");
   }
 
   await connectDB();
   const application = await Application.findById(id);
   if (!application) return problem("Application not found.");
 
-  const advance = Math.round((totalAmount * siteConfig.advancePercent) / 100);
-  const balance = Math.max(totalAmount - advance, 0);
+  // The government fee is payable in full up front; only our own charge splits.
+  const quote = computeQuote(serviceCharge, governmentFee);
 
   application.quote = {
-    totalAmount,
-    governmentFee,
+    serviceCharge: quote.serviceCharge,
+    governmentFee: quote.governmentFee,
+    totalAmount: quote.total,
     notes,
     quotedAt: new Date(),
   };
-  application.payments.advance.amount = advance;
-  application.payments.balance.amount = balance;
+  application.payments.advance.amount = quote.advance;
+  application.payments.balance.amount = quote.balance;
 
   // Only move the status forward: a re-quote must not undo later progress.
   if (application.status === "SUBMITTED") {
@@ -238,7 +246,7 @@ export async function setQuoteAction(
   application.timeline.push({
     status: application.status as ApplicationStatus,
     title: "Price confirmed",
-    note: `Total ${totalAmount}. Booking ${advance}, balance ${balance}.${
+    note: `Government fee ${quote.governmentFee} + service charge ${quote.serviceCharge} = ${quote.total}. To start ${quote.advance}, balance ${quote.balance}.${
       notes ? ` ${notes}` : ""
     }`,
     by: session.name,
@@ -549,9 +557,6 @@ export async function uploadDeliverableAction(
   if (application.deliverable.fileId) {
     await deleteFile(application.deliverable.fileId);
   }
-  if (application.deliverable.previewFileId) {
-    await deleteFile(application.deliverable.previewFileId);
-  }
 
   const fileId = await uploadBuffer({
     buffer,
@@ -564,25 +569,8 @@ export async function uploadDeliverableAction(
     },
   });
 
-  const preview = await buildWatermarkedPreview({
-    buffer,
-    contentType,
-    trackingId: application.trackingId,
-  });
-
-  let previewFileId;
-  if (preview) {
-    previewFileId = await uploadBuffer({
-      buffer: preview.buffer,
-      filename: `preview-${application.trackingId}.pdf`,
-      contentType: preview.contentType,
-      metadata: { trackingId: application.trackingId, kind: "preview" },
-    });
-  }
-
   application.deliverable = {
     fileId,
-    previewFileId,
     filename,
     contentType,
     size: file.size,
@@ -600,10 +588,8 @@ export async function uploadDeliverableAction(
 
   application.timeline.push({
     status: application.status as ApplicationStatus,
-    title: "Document ready for your review",
-    note: preview
-      ? "A watermarked preview is now visible on your tracking page. The original unlocks after the balance is cleared."
-      : "Your document is ready. Contact us to view it before clearing the balance.",
+    title: "Your document is ready",
+    note: "It is prepared and waiting. Clear the balance and it unlocks for download on this page.",
     by: session.name,
     at: new Date(),
   });
@@ -611,11 +597,7 @@ export async function uploadDeliverableAction(
   await application.save();
   refresh(id);
 
-  return done(
-    preview
-      ? "Document uploaded and a watermarked preview was generated."
-      : "Document uploaded. No preview could be generated for this file type."
-  );
+  return done("Document uploaded. It stays locked until you release it.");
 }
 
 export async function releaseDocumentAction(
@@ -732,6 +714,59 @@ export async function updateLeadAction(
   revalidatePath("/admin/leads");
   revalidatePath("/admin");
   return done("Lead updated.");
+}
+
+/* --------------------------------------------------------------- settings */
+
+/** Only http(s) links, so nothing on the footer can become a javascript: URL. */
+function cleanUrl(value: string) {
+  const trimmed = cleanLine(value, 300);
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : "";
+  } catch {
+    return "";
+  }
+}
+
+export async function saveSocialLinksAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await requireAdmin();
+
+  const input = fields(formData, ["youtube", "instagram", "facebook"] as const);
+
+  const social = {
+    youtube: cleanUrl(input.youtube),
+    instagram: cleanUrl(input.instagram),
+    facebook: cleanUrl(input.facebook),
+  };
+
+  // Tell them which one was dropped rather than silently blanking it.
+  const rejected = (
+    ["youtube", "instagram", "facebook"] as const
+  ).filter((key) => input[key].trim() && !social[key]);
+
+  if (rejected.length) {
+    return problem(
+      `That ${rejected.join(" and ")} link is not a valid web address. Paste the full link, starting with https://`
+    );
+  }
+
+  await connectDB();
+  await Setting.findByIdAndUpdate(
+    SETTINGS_ID,
+    { $set: { social, updatedBy: session.name } },
+    { upsert: true, new: true }
+  );
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return done("Saved. The footer updates everywhere on the site.");
 }
 
 /* --------------------------------------------------------------- password */

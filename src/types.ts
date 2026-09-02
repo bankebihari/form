@@ -83,15 +83,15 @@ export type PlainApplication = {
   attachments: PlainAttachment[];
   status: ApplicationStatus;
   quote: {
-    totalAmount: number;
+    serviceCharge: number;
     governmentFee: number;
+    totalAmount: number;
     notes?: string;
     quotedAt?: string;
   };
   payments: { advance: PlainPayment; balance: PlainPayment };
   deliverable: {
     fileId?: string;
-    previewFileId?: string;
     filename?: string;
     contentType?: string;
     size?: number;
@@ -121,13 +121,17 @@ export type TrackingView = {
   applicantName: string;
   createdAt: string;
   updatedAt: string;
-  quote: { totalAmount: number; governmentFee: number; notes?: string };
+  quote: {
+    serviceCharge: number;
+    governmentFee: number;
+    totalAmount: number;
+    notes?: string;
+  };
   payments: { advance: PlainPayment; balance: PlainPayment };
   amountDue: number;
   document: {
     exists: boolean;
     filename?: string;
-    hasPreview: boolean;
     released: boolean;
     releasedAt?: string;
   };

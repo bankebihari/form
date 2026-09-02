@@ -18,7 +18,7 @@ export const siteConfig = {
    */
   trackingPrefix: "OCC",
   description:
-    "Apply for caste certificate, income certificate, domicile, PAN, passport, affidavits and more without standing in queues. Raise a request online, track it live, pay only 10% to start.",
+    "Apply for caste certificate, income certificate, domicile, PAN, passport, affidavits and more without standing in queues. Raise a request online, track it live, and pay the government fee plus only 10% of our service charge to begin.",
 
   // --- Contact (EDIT THESE) ----------------------------------
   // Use full international format WITHOUT + or spaces for WhatsApp.

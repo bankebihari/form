@@ -1,14 +1,24 @@
-import { siteConfig } from "@/config/site";
+import { computeQuote } from "@/lib/pricing";
 import type { PlainApplication, TrackingView } from "@/types";
 
-/** Amounts the admin has not filled in yet are derived from the total. */
+/**
+ * What the client owes. The stored payment amounts win, because a staff member
+ * may have adjusted them; the computed split is only a fallback for records
+ * saved before an amount was set.
+ */
 export function computeAmounts(application: PlainApplication) {
-  const total = application.quote?.totalAmount ?? 0;
-  const advance =
-    application.payments?.advance?.amount ||
-    Math.round((total * siteConfig.advancePercent) / 100);
-  const balance = application.payments?.balance?.amount || Math.max(total - advance, 0);
-  return { total, advance, balance };
+  const serviceCharge = application.quote?.serviceCharge ?? 0;
+  const governmentFee = application.quote?.governmentFee ?? 0;
+  const quote = computeQuote(serviceCharge, governmentFee);
+
+  return {
+    serviceCharge: quote.serviceCharge,
+    governmentFee: quote.governmentFee,
+    total: application.quote?.totalAmount || quote.total,
+    advance: application.payments?.advance?.amount || quote.advance,
+    balance: application.payments?.balance?.amount || quote.balance,
+    serviceAdvance: quote.serviceAdvance,
+  };
 }
 
 export function amountDueFor(application: PlainApplication) {
@@ -23,7 +33,8 @@ export function amountDueFor(application: PlainApplication) {
  * notes, staff names on private entries and raw file ids never leave here.
  */
 export function toTrackingView(application: PlainApplication): TrackingView {
-  const { total, advance, balance } = computeAmounts(application);
+  const amounts = computeAmounts(application);
+  const { total, advance, balance } = amounts;
 
   return {
     trackingId: application.trackingId,
@@ -34,8 +45,9 @@ export function toTrackingView(application: PlainApplication): TrackingView {
     createdAt: application.createdAt,
     updatedAt: application.updatedAt,
     quote: {
+      serviceCharge: amounts.serviceCharge,
+      governmentFee: amounts.governmentFee,
       totalAmount: total,
-      governmentFee: application.quote?.governmentFee ?? 0,
       notes: application.quote?.notes ?? "",
     },
     payments: {
@@ -46,7 +58,6 @@ export function toTrackingView(application: PlainApplication): TrackingView {
     document: {
       exists: Boolean(application.deliverable?.fileId),
       filename: application.deliverable?.filename || "",
-      hasPreview: Boolean(application.deliverable?.previewFileId),
       released: Boolean(application.deliverable?.released),
       releasedAt: application.deliverable?.releasedAt,
     },
