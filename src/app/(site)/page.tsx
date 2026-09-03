@@ -75,8 +75,13 @@ export default async function HomePage() {
           className="absolute -left-40 top-32 h-[360px] w-[360px] rounded-full bg-success-100/50 blur-3xl"
           aria-hidden
         />
-        <div className="container-page relative py-14 sm:py-20 lg:py-24">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+        {/* Less padding above than below: the header already sits on top, and a
+            deep top inset just pushes the headline under the fold. */}
+        <div className="container-page relative pb-14 pt-8 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14">
+          {/* items-start, not items-center: the payment card is taller than the
+              copy beside it, and centring the shorter column left a dead band
+              across the top of the section. */}
+          <div className="grid items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[12.5px] font-semibold text-navy-800 shadow-soft">
                 <ShieldCheck
