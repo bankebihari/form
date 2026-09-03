@@ -213,40 +213,7 @@ export default async function HomePage() {
                   </li>
                 </ol>
 
-                {/* The arithmetic, spelled out. This is the bit people ask about. */}
-                <div className="mt-4 rounded-xl border border-navy-200 bg-navy-50 p-4">
-                  <p className="text-[12px] font-bold uppercase tracking-wide text-navy-700">
-                    For example, a PAN card
-                  </p>
-                  <dl className="mt-2.5 space-y-1.5 text-[13px]">
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-muted">Government fee</dt>
-                      <dd className="font-semibold text-navy-900">&#8377;100</dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-muted">Our service charge</dt>
-                      <dd className="font-semibold text-navy-900">&#8377;50</dd>
-                    </div>
-                    <div className="flex justify-between gap-3 border-t border-navy-200 pt-1.5">
-                      <dt className="font-semibold text-navy-900">
-                        You pay to start
-                      </dt>
-                      <dd className="font-bold text-brand-700">
-                        &#8377;105
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-muted">Then, when it is ready</dt>
-                      <dd className="font-semibold text-navy-900">&#8377;45</dd>
-                    </div>
-                  </dl>
-                  <p className="mt-2.5 text-[12px] leading-relaxed text-muted">
-                    &#8377;105 is the &#8377;100 government fee in full, plus
-                    &#8377;5 &mdash; a tenth of our &#8377;50.
-                  </p>
-                </div>
-
-                <p className="mt-5 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-3.5 text-[12.5px] leading-relaxed text-navy-700">
+                <p className="mt-4 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-3.5 text-[12.5px] leading-relaxed text-navy-700">
                   <Lock
                     className="mt-0.5 h-4 w-4 shrink-0 text-brand-700"
                     aria-hidden
