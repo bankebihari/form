@@ -78,11 +78,11 @@ export default async function HomePage() {
         {/* Less padding above than below: the header already sits on top, and a
             deep top inset just pushes the headline under the fold. */}
         <div className="container-page relative pb-14 pt-8 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14">
-          {/* items-start, not items-center: the payment card is taller than the
-              copy beside it, and centring the shorter column left a dead band
-              across the top of the section. */}
-          <div className="grid items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-            <div>
+          {/* Both columns stretch to the same height and the calls to action are
+              pushed to the bottom of the left one, so the copy and the payment
+              card start and finish together instead of one dangling short. */}
+          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:gap-12">
+            <div className="flex flex-col">
               <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[12.5px] font-semibold text-navy-800 shadow-soft">
                 <ShieldCheck
                   className="h-3.5 w-3.5 text-success-600"
@@ -92,21 +92,20 @@ export default async function HomePage() {
                 {new Date().getFullYear() - Number(siteConfig.stats.yearsActive)}
               </span>
 
-              <h1 className="mt-5 font-display text-[32px] font-extrabold leading-[1.1] text-navy-900 sm:text-[44px] lg:text-[52px]">
+              <h1 className="mt-4 font-display text-[30px] font-extrabold leading-[1.08] text-navy-900 sm:text-[38px] lg:text-[44px]">
                 Government documents,
                 <span className="block text-brand-700">
                   without the queue.
                 </span>
               </h1>
 
-              <p className="mt-5 max-w-xl text-[15.5px] leading-relaxed text-muted sm:text-[17px]">
+              <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted sm:text-[16px]">
                 Caste, income, domicile, birth, PAN, affidavits and more. We
                 fill the forms, file them and follow up, so you never queue at a
-                government office. Raise a request in two minutes and track
-                every stage from your phone.
+                government office.
               </p>
 
-              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5">
+              <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
                 {heroChips.map((chip) => (
                   <li
                     key={chip}
@@ -121,7 +120,7 @@ export default async function HomePage() {
                 ))}
               </ul>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:mt-auto lg:pt-8">
                 <LinkButton href="/request" size="lg" className="sm:w-auto">
                   Raise a request
                   <ArrowRight className="h-4 w-4" aria-hidden />
@@ -138,7 +137,7 @@ export default async function HomePage() {
                 </AnchorButton>
               </div>
 
-              <p className="mt-4 text-[13px] text-muted">
+              <p className="mt-3.5 text-[13px] text-muted">
                 Prefer talking?{" "}
                 <a
                   href={callLink}
@@ -158,7 +157,7 @@ export default async function HomePage() {
 
             {/* Payment ladder — the promise that makes people trust the site */}
             <div className="relative">
-              <div className="rounded-2xl border border-line bg-white p-5 shadow-lift sm:p-6">
+              <div className="rounded-2xl border border-line bg-white p-5 shadow-lift">
                 <div className="flex items-center justify-between">
                   <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-brand-700">
                     How payment works
@@ -166,8 +165,8 @@ export default async function HomePage() {
                   <Badge tone="success">Safe for you</Badge>
                 </div>
 
-                <ol className="mt-5 space-y-3">
-                  <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-4">
+                <ol className="mt-4 space-y-2.5">
+                  <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-3.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-800 text-white">
                       <Landmark className="h-5 w-5" aria-hidden />
                     </span>
@@ -183,7 +182,7 @@ export default async function HomePage() {
                     </span>
                   </li>
 
-                  <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-4">
+                  <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-3.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-600 font-display text-[15px] font-extrabold text-white">
                       10%
                     </span>
@@ -197,7 +196,7 @@ export default async function HomePage() {
                     </span>
                   </li>
 
-                  <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-4">
+                  <li className="flex gap-3.5 rounded-xl border border-line bg-canvas p-3.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-600 font-display text-[15px] font-extrabold text-white">
                       90%
                     </span>
@@ -213,7 +212,7 @@ export default async function HomePage() {
                   </li>
                 </ol>
 
-                <p className="mt-4 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-3.5 text-[12.5px] leading-relaxed text-navy-700">
+                <p className="mt-3.5 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-3.5 text-[12.5px] leading-relaxed text-navy-700">
                   <Lock
                     className="mt-0.5 h-4 w-4 shrink-0 text-brand-700"
                     aria-hidden
@@ -229,7 +228,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="mt-12 lg:mt-16">
+          <div className="mt-10 lg:mt-12">
             <StatsBar />
           </div>
         </div>
